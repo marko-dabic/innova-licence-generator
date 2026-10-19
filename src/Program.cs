@@ -1,4 +1,5 @@
 using System.Text.Json.Serialization;
+using Microsoft.OpenApi;
 using InnovaTest.LicenceGenerator;
 using InnovaTest.LicenceGenerator.Configuration;
 using InnovaTest.LicenceGenerator.Errors;
@@ -11,6 +12,7 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 
 builder.Services.AddControllers().AddJsonOptions(options =>
     options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow);
+builder.Services.AddSwaggerGen();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<LicenceRequestExceptionHandler>();
 builder.Services.AddSingleton(TimeProvider.System);
@@ -26,5 +28,9 @@ var app = builder.Build();
 _ = app.Services.GetRequiredService<SigningKey>();
 app.UseExceptionHandler();
 app.UseStatusCodePages();
+
+app.UseSwagger();
+app.UseSwaggerUI();
+
 app.MapControllers();
 app.Run();
