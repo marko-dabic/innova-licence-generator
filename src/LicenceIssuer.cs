@@ -1,7 +1,6 @@
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
-using InnovaTest.Licensing;
 
 namespace InnovaTest.LicenceGenerator;
 
@@ -11,7 +10,11 @@ public sealed class LicenceIssuer(TimeProvider? timeProvider = null)
 
     public LicenceDocument Issue(LicenceRequest request, string privateKeyPem)
     {
+        ArgumentNullException.ThrowIfNull(request);
+        LicenceRules.Check(request.DeviceId, request.EnabledOptions, request.MaxConcurrentSessions);
         var now = _clock.GetUtcNow().ToUnixTimeSeconds();
+        if (request.ExpiresAtUtc.ToUnixTimeSeconds() <= now)
+            throw new ArgumentException("Expiry must be in the future.");
         var claims = new LicenceClaims
         {
             LicenceId = Guid.NewGuid().ToString(), IssuedAt = now, NotBefore = now,
@@ -26,8 +29,6 @@ public sealed class LicenceIssuer(TimeProvider? timeProvider = null)
         var input = $"{header}.{payload}";
         var signature = rsa.SignData(Encoding.ASCII.GetBytes(input), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
         var document = new LicenceDocument($"{input}.{Encode(signature)}");
-        // Apply exactly the same claim rules used by the offline application before issuing.
-        new RsaLicenceValidator(_clock).Validate(document, rsa.ExportSubjectPublicKeyInfoPem(), request.DeviceId);
         return document;
     }
 

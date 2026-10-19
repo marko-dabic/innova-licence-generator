@@ -7,5 +7,3 @@ licences/
 *.pfx
 *.p12
 
-# Local validation library; will move into the desktop application.
-/src/InnovaTest.Licensing/

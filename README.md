@@ -10,10 +10,10 @@ Run from this repository directory in PowerShell:
 
 ```powershell
 dotnet build InnovaTest.Licensing.slnx -c Release
-dotnet run --project src/InnovaTest.LicenceGenerator -- keys keys
+dotnet run --project src -- keys keys
 # Edit examples/request.json with the real device serial, features and expiry.
-dotnet run --project src/InnovaTest.LicenceGenerator -- issue examples/request.json keys/licence.private.pem licence.json
-dotnet run --project src/InnovaTest.LicenceGenerator -- validate licence.json keys/licence.public.pem INNOVATEST-SERIAL-12345
+dotnet run --project src -- issue examples/request.json keys/licence.private.pem licence.json
+dotnet run --project src -- validate licence.json keys/licence.public.pem INNOVATEST-SERIAL-12345
 ```
 
 The output is JSON containing one `token` property: a standard compact RS256 JWT. All claims (including enabled options, device ID, maximum concurrent sessions and expiry) are inside the signed JWT. Changing any signed data invalidates the signature. JWT signing does not encrypt the contents; customers can read them. Expiry is an exact UTC instant, exclusive, with no grace period. `iat`, `nbf` and `exp` use Unix seconds. Always provide an explicit timezone in requests (use `Z` for UTC as in the example); a date without an offset is interpreted using the issuing computer?s local timezone.
