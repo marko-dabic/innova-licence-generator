@@ -13,12 +13,12 @@ public sealed class LicenceIssuer(TimeProvider? timeProvider = null)
     public LicenceDocument Issue(LicenceRequestDto request, string privateKeyPem)
     {
         var now = _clock.GetUtcNow().ToUnixTimeSeconds();
-        LicenceRules.Check(request, now);
+        LicenceRules.Check(request);
 
         var claims = new LicenceClaims
         {
-            LicenceId = Guid.NewGuid().ToString(), IssuedAt = now, NotBefore = now,
-            ExpiresAt = request.ExpiresAtUtc.ToUnixTimeSeconds(), DeviceId = request.DeviceId,
+            LicenceId = Guid.NewGuid().ToString(), IssuedAt = now,
+            ValidityInMonths = request.ValidityInMonths, DeviceId = request.DeviceId,
             EnabledOptions = request.EnabledOptions, MaxConcurrentSessions = request.MaxConcurrentSessions
         };
         

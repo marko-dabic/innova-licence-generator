@@ -17,28 +17,28 @@ The local `keys/` directory already contains a generated key pair. Keep the priv
 
 ## Issue a licence
 
-`POST /api/licences` accepts the JSON contents of `examples/request.json` in the HTTP body with `Content-Type: application/json` (no multipart upload).
+`POST /licences/issue` accepts the JSON contents of `examples/request.json` in the HTTP body with `Content-Type: application/json` (no multipart upload).
 
 ```powershell
-curl.exe --request POST http://localhost:5050/api/licences --header "Content-Type: application/json" --data-binary "@examples/request.json" --output licence.json
+curl.exe --request POST http://localhost:5050/licences/issue --header "Content-Type: application/json" --data-binary "@examples/request.json" --output licence.json
 ```
 
 ```json
 {
   "deviceId": "INNOVATEST-SERIAL-12345",
   "enabledOptions": ["hardness-testing", "report-export"],
-  "expiresAtUtc": "2027-12-31T23:59:59Z",
+  "validityInMonths": 6,
   "maxConcurrentSessions": 2
 }
 ```
 
-Success returns HTTP 200 with `{ "token": "<signed JWT>" }`. Save the response as the licence JSON on the client. Malformed JSON, missing fields, unknown fields, invalid options/session limits/device IDs, and past expiry return HTTP 400 problem details. Other failures return generic HTTP 500 problem details and are logged server-side. Requests are limited to 64 KiB. Responses use `Cache-Control: no-store`. All four fields are required; use explicit UTC dates with `Z`.
+Success returns HTTP 200 with `{ "token": "<signed JWT>" }`. Save the response as the licence JSON on the client. Malformed JSON, missing fields, unknown fields, invalid options/session limits/device IDs, and non-positive validity durations return HTTP 400 problem details. Other failures return generic HTTP 500 problem details and are logged server-side. Requests are limited to 64 KiB. Responses use `Cache-Control: no-store`. `deviceId` and `enabledOptions` are required. `validityInMonths` defaults to 6 and `maxConcurrentSessions` defaults to 1 when omitted; both must be positive integers when supplied. The signed payload contains this duration instead of an `exp` claim; it does not calculate expiry at issuance. Activation tracking and expiry enforcement are not implemented yet. Previously issued licences with an `exp` claim retain their fixed expiry.
 
 ## Deployment and future payments
 
-This initial endpoint is for trusted local use and has no authentication or payment integration. Before exposing it online, add authentication and authorization, HTTPS at the host or reverse proxy, and rate limits. Configure `AllowedHosts` and listening URLs for your deployment. A customer-facing payment flow must derive allowed options, expiry, device and session limits from a verified paid order on the server, rather than allowing customers to choose their own entitlements. Add order persistence and idempotency before automated payment fulfillment. The present endpoint issues a fresh licence on every successful call.
+This initial endpoint is for trusted local use and has no authentication or payment integration. Before exposing it online, add authentication and authorization, HTTPS at the host or reverse proxy, and rate limits. Configure `AllowedHosts` and listening URLs for your deployment. A customer-facing payment flow must derive allowed options, duration, device and session limits from a verified paid order on the server, rather than allowing customers to choose their own entitlements. Add order persistence and idempotency before automated payment fulfillment. The present endpoint issues a fresh licence on every successful call.
 
-Offline licence validation belongs in the desktop application: verify the signature with its trusted public key, issuer/audience/version, dates and actual device identity, and enforce feature and session limits. Signed JWTs are readable and resist claim editing; offline expiry still depends on trustworthy local time.
+Offline licence validation belongs in the desktop application: verify the signature with its trusted public key, issuer/audience, dates and actual device identity, and enforce feature and session limits. Signed JWTs are readable and resist claim editing; offline expiry still depends on trustworthy local time.
 
 ## Verification
 

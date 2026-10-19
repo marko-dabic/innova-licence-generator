@@ -19,7 +19,7 @@ public sealed class LicencesController : ControllerBase
         _signingKey = signingKey;
     }
 
-    [HttpPost]
+    [HttpPost("issue")]
     [RequestSizeLimit(65536)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]

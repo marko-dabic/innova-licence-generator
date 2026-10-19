@@ -5,7 +5,7 @@ namespace InnovaTest.LicenceGenerator;
 
 internal static class LicenceRules
 {
-    public static void Check(LicenceRequestDto request, long now)
+    public static void Check(LicenceRequestDto request)
     {
         ArgumentNullException.ThrowIfNull(request);
 
@@ -25,7 +25,5 @@ internal static class LicenceRules
                     "Option names must be unique.");
         }
 
-        if (request.ExpiresAtUtc.ToUnixTimeSeconds() <= now)
-            throw new InvalidLicenceRequestException(nameof(request.ExpiresAtUtc), "Expiry must be in the future.");
     }
 }
