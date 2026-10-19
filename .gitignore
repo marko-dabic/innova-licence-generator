@@ -1,0 +1,11 @@
+**/bin/
+**/obj/
+.vs/
+keys/
+licences/
+*.private.pem
+*.pfx
+*.p12
+
+# Local validation library; will move into the desktop application.
+/src/InnovaTest.Licensing/

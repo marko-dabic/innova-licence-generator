@@ -1,0 +1,6 @@
+{
+  "deviceId": "INNOVATEST-SERIAL-12345",
+  "enabledOptions": ["hardness-testing", "report-export"],
+  "expiresAtUtc": "2027-12-31T23:59:59Z",
+  "maxConcurrentSessions": 2
+}
