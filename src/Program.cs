@@ -9,10 +9,13 @@ using InnovaTest.LicenceGenerator.Configuration;
 try
 {
     using var configuration = new ConfigurationManager();
+    
     configuration.SetBasePath(AppContext.BaseDirectory)
         .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+
     var options = configuration.GetRequiredSection("LicenceGenerator").Get<GeneratorOptions>()
         ?? throw new InvalidOperationException("Missing LicenceGenerator configuration.");
+
     Validator.ValidateObject(options, new ValidationContext(options), validateAllProperties: true);
 
     var request = JsonSerializer.Deserialize<LicenceRequest>(File.ReadAllText(options.RequestPath), LicenceJson.Options)

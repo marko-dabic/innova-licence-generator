@@ -14,7 +14,9 @@ public static class LicenceJson
             WriteIndented = true,
             UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow
         };
+
         options.MakeReadOnly(populateMissingResolver: true);
+        
         return options;
     }
 }
