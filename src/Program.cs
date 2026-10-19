@@ -1,36 +1,30 @@
-using System.ComponentModel.DataAnnotations;
-using Microsoft.Extensions.Configuration;
-using System.Security.Cryptography;
-using System.Text.Json;
+using System.Text.Json.Serialization;
 using InnovaTest.LicenceGenerator;
-using InnovaTest.LicenceGenerator.Models;
 using InnovaTest.LicenceGenerator.Configuration;
+using InnovaTest.LicenceGenerator.Errors;
 
-try
+var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
-    using var configuration = new ConfigurationManager();
-    
-    configuration.SetBasePath(AppContext.BaseDirectory)
-        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+    Args = args,
+    ContentRootPath = AppContext.BaseDirectory
+});
 
-    var options = configuration.GetRequiredSection("LicenceGenerator").Get<GeneratorOptions>()
-        ?? throw new InvalidOperationException("Missing LicenceGenerator configuration.");
+builder.Services.AddControllers().AddJsonOptions(options =>
+    options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow);
+builder.Services.AddProblemDetails();
+builder.Services.AddExceptionHandler<LicenceRequestExceptionHandler>();
+builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<LicenceIssuer>();
+builder.Services.AddOptions<GeneratorOptions>()
+    .Bind(builder.Configuration.GetRequiredSection("LicenceGenerator"))
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
+builder.Services.AddSingleton<SigningKey>();
 
-    Validator.ValidateObject(options, new ValidationContext(options), validateAllProperties: true);
+var app = builder.Build();
 
-    var request = JsonSerializer.Deserialize<LicenceRequest>(File.ReadAllText(options.RequestPath), LicenceJson.Options)
-        ?? throw new ArgumentException("Missing licence request.");
-
-    var document = new LicenceIssuer().Issue(request, File.ReadAllText(options.PrivateKeyPath));
-    
-    LicenceFile.SaveNew(options.OutputPath, JsonSerializer.Serialize(document, LicenceJson.Options));
-
-    Console.WriteLine($"Licence created: {Path.GetFullPath(options.OutputPath)}");
-    return 0;
-}
-catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException
-    or ArgumentException or CryptographicException or InvalidOperationException or ValidationException)
-{
-    Console.Error.WriteLine(ex.Message);
-    return 1;
-}
+_ = app.Services.GetRequiredService<SigningKey>();
+app.UseExceptionHandler();
+app.UseStatusCodePages();
+app.MapControllers();
+app.Run();
