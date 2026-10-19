@@ -1,4 +1,4 @@
-namespace InnovaTest.LicenceGenerator;
+namespace InnovaTest.LicenceGenerator.Models;
 
 public sealed record LicenceRequest
 {

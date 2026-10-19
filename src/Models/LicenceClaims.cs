@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace InnovaTest.LicenceGenerator;
+namespace InnovaTest.LicenceGenerator.Models;
 
 public sealed record LicenceClaims
 {
