@@ -11,7 +11,7 @@ dotnet build InnovaTest.LicenceGenerator.slnx -c Release
 dotnet run --project src
 ```
 
-The API listens on `http://localhost:5050` by default. Configure `LicenceGenerator:PrivateKeyPath` in the root `appsettings.json`. Relative key paths resolve from the working directory where you start the API. Configuration is copied beside the executable during build/publish; edit that copy for a deployed executable. ASP.NET Core environment overrides are supported, e.g. `LicenceGenerator__PrivateKeyPath` and `ASPNETCORE_URLS`. Missing, invalid, undersized or public-only keys prevent startup. Restart to load a changed key.
+The API listens on `http://localhost:5050` by default. Configure `LicenceGenerator:PrivateKeyPath` in the root `appsettings.json`. In a source checkout, the API uses the root appsettings.json and resolves relative key paths from the repository root, regardless of whether it starts from Visual Studio, the output directory, or dotnet run. Outside the checkout, published applications use appsettings.json beside the executable and resolve relative paths from that directory. Configuration is copied during build/publish; edit that copy for deployment. Absolute key paths are also supported. ASP.NET Core environment overrides are supported, e.g. `LicenceGenerator__PrivateKeyPath` and `ASPNETCORE_URLS`. Missing, invalid, undersized or public-only keys prevent startup. Restart to load a changed key.
 
 The local `keys/` directory already contains a generated key pair. Keep the private key only on the issuing server, protected by OS file permissions; it is an unencrypted PEM. Ship the public key with the offline application. Never send the private key in API requests or include it in source control.
 

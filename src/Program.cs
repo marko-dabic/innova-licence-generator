@@ -6,7 +6,7 @@ using InnovaTest.LicenceGenerator.Errors;
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
     Args = args,
-    ContentRootPath = AppContext.BaseDirectory
+    ContentRootPath = ConfigurationDirectory.Find()
 });
 
 builder.Services.AddControllers().AddJsonOptions(options =>

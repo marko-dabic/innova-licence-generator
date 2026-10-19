@@ -7,9 +7,15 @@ public sealed class SigningKey
 {
     public string Pem { get; }
 
-    public SigningKey(IOptions<GeneratorOptions> options)
+    public SigningKey(IOptions<GeneratorOptions> options, IHostEnvironment environment)
     {
-        Pem = File.ReadAllText(options.Value.PrivateKeyPath);
+        var path = Path.GetFullPath(options.Value.PrivateKeyPath, environment.ContentRootPath);
+        
+        if (!File.Exists(path))
+            throw new FileNotFoundException(
+                $"Signing key not found at '{path}'. Configure LicenceGenerator:PrivateKeyPath in appsettings.json or LicenceGenerator__PrivateKeyPath.", path);
+
+        Pem = File.ReadAllText(path);
 
         using var rsa = RSA.Create();
         
