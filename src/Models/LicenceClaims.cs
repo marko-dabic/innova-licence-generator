@@ -12,5 +12,4 @@ public sealed record LicenceClaims
     public required int MaxConcurrentSessions { get; init; }
     public required string[] EnabledOptions { get; init; }
     [JsonPropertyName("iat")] public required long IssuedAt { get; init; }
-
 }
