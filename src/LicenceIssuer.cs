@@ -1,4 +1,5 @@
 using InnovaTest.LicenceGenerator.Models;
+using InnovaTest.LicenceGenerator.Dtos;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -9,7 +10,7 @@ public sealed class LicenceIssuer(TimeProvider? timeProvider = null)
 {
     private readonly TimeProvider _clock = timeProvider ?? TimeProvider.System;
 
-    public LicenceDocument Issue(LicenceRequest request, string privateKeyPem)
+    public LicenceDocument Issue(LicenceRequestDto request, string privateKeyPem)
     {
         var now = _clock.GetUtcNow().ToUnixTimeSeconds();
         LicenceRules.Check(request, now);

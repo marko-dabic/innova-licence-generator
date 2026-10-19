@@ -1,28 +1,31 @@
-using InnovaTest.LicenceGenerator.Models;
+using InnovaTest.LicenceGenerator.Dtos;
 using InnovaTest.LicenceGenerator.Errors;
 
 namespace InnovaTest.LicenceGenerator;
 
 internal static class LicenceRules
 {
-    public static void Check(LicenceRequest request, long now)
+    public static void Check(LicenceRequestDto request, long now)
     {
         ArgumentNullException.ThrowIfNull(request);
 
-        var deviceId = request.DeviceId;
-        var options = request.EnabledOptions;
-        var sessions = request.MaxConcurrentSessions;
+        if (!string.IsNullOrWhiteSpace(request.DeviceId) && request.DeviceId != request.DeviceId.Trim())
+            throw new InvalidLicenceRequestException(nameof(request.DeviceId),
+                "Device ID must not have surrounding whitespace.");
 
-        if (string.IsNullOrWhiteSpace(deviceId) || deviceId != deviceId.Trim() || deviceId.Length > 256)
-            throw new InvalidLicenceRequestException("Device ID must be 1-256 characters with no surrounding whitespace.");
+        if (request.EnabledOptions is not null)
+        {
+            if (request.EnabledOptions.Any(option => string.IsNullOrWhiteSpace(option)
+                || option.Length > 128 || option != option.Trim()))
+                throw new InvalidLicenceRequestException(nameof(request.EnabledOptions),
+                    "Option names must be 1-128 characters with no surrounding whitespace.");
 
-        if (sessions < 1) throw new InvalidLicenceRequestException("MaxConcurrentSessions must be positive.");
-        
-        if (options is null || options.Length > 128 || options.Any(o => string.IsNullOrWhiteSpace(o)
-            || o.Length > 128 || o != o.Trim()) || options.Distinct(StringComparer.Ordinal).Count() != options.Length)
-            throw new InvalidLicenceRequestException("Options must be unique, non-empty names (at most 128 names, 128 characters each).");
+            if (request.EnabledOptions.Distinct(StringComparer.Ordinal).Count() != request.EnabledOptions.Length)
+                throw new InvalidLicenceRequestException(nameof(request.EnabledOptions),
+                    "Option names must be unique.");
+        }
 
         if (request.ExpiresAtUtc.ToUnixTimeSeconds() <= now)
-            throw new InvalidLicenceRequestException("Expiry must be in the future.");
+            throw new InvalidLicenceRequestException(nameof(request.ExpiresAtUtc), "Expiry must be in the future.");
     }
 }

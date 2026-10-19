@@ -21,7 +21,7 @@ internal sealed class LicenceRequestExceptionHandler(IProblemDetailsService prob
                 }
             });
         }
-        if (exception is not InvalidLicenceRequestException) return false;
+        if (exception is not InvalidLicenceRequestException validationException) return false;
 
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
         return await problemDetails.TryWriteAsync(new ProblemDetailsContext
@@ -29,7 +29,7 @@ internal sealed class LicenceRequestExceptionHandler(IProblemDetailsService prob
             HttpContext = context,
             ProblemDetails = new ValidationProblemDetails(new Dictionary<string, string[]>
             {
-                ["request"] = [exception.Message]
+                [validationException.Field] = [validationException.Message]
             })
             {
                 Status = StatusCodes.Status400BadRequest,
