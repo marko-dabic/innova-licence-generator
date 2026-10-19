@@ -1,6 +1,6 @@
 # InnovaTEST Licence Generator
 
-A standalone .NET 10 console application for creating RSA keys and issuing signed offline licences. No external packages are required.
+A standalone .NET 10 console application for issuing signed offline licences. Uses the standard Microsoft.Extensions.Configuration JSON provider and configuration binder.
 
 ## Usage
 
@@ -8,13 +8,29 @@ Run from the repository directory:
 
 ```powershell
 dotnet build InnovaTest.LicenceGenerator.slnx -c Release
-# Create keys once in a new directory:
-dotnet run --project src -- keys keys
-# Edit the request with the actual device serial, options and expiry:
-dotnet run --project src -- issue examples/request.json keys/licence.private.pem licence.json
+# Edit appsettings.json paths and examples/request.json, then run:
+dotnet run --project src
 ```
 
-The local `keys/` directory already contains a generated key pair, so skip key creation when using that pair. `example-licence.json` contains a previously issued sample. Existing keys and output files are never overwritten. Output parent directories must exist. Commands exit with code 0 on success and 1 on invalid input or failure.
+The local `keys/` directory already contains a generated key pair. The application uses an existing private key; it does not generate keys. `example-licence.json` contains a previously issued sample. Existing output files are never overwritten. Output parent directories must exist. The application exits with code 0 on success and 1 on invalid input or failure.
+
+## Configuration
+
+Edit `appsettings.json` in the repository root:
+
+```json
+{
+  "LicenceGenerator": {
+    "RequestPath": "examples/request.json",
+    "PrivateKeyPath": "keys/licence.private.pem",
+    "OutputPath": "licence.json"
+  }
+}
+```
+
+.NET reads the JSON and binds the `LicenceGenerator` section to `GeneratorOptions`. All three paths are required and checked before issuance. Only the private key path is configured here; the key remains in its PEM file.
+
+The configuration file is copied beside the executable during build and publish. Relative paths resolve from the working directory, so run the commands above from the repository root. For a published application, edit the appsettings.json beside the executable and use absolute paths or run from the directory containing the configured input files. Rebuild after changing the root configuration when using compiled output directly. Existing environment files are no longer used.
 
 ## Request and output
 

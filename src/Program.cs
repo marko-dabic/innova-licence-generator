@@ -1,35 +1,32 @@
-using InnovaTest.LicenceGenerator.Models;
+using System.ComponentModel.DataAnnotations;
+using Microsoft.Extensions.Configuration;
 using System.Security.Cryptography;
 using System.Text.Json;
 using InnovaTest.LicenceGenerator;
+using InnovaTest.LicenceGenerator.Models;
+using InnovaTest.LicenceGenerator.Configuration;
 
 try
 {
-    switch (args)
-    {
-        case ["keys", var directory]:
-            KeyGenerator.Generate(directory);
-            Console.WriteLine($"Keys created in {Path.GetFullPath(directory)}. Keep the private key on the issuing computer.");
-            break;
-        case ["issue", var requestPath, var privateKeyPath, var outputPath]:
-            var request = JsonSerializer.Deserialize<LicenceRequest>(File.ReadAllText(requestPath), LicenceJson.Options)
-                ?? throw new ArgumentException("Missing licence request.");
-            var document = new LicenceIssuer().Issue(request, File.ReadAllText(privateKeyPath));
-            KeyGenerator.SaveNew(outputPath, JsonSerializer.Serialize(document, LicenceJson.Options));
-            Console.WriteLine($"Licence created: {Path.GetFullPath(outputPath)}");
-            break;
-        default:
-            Console.WriteLine("""
-                InnovaTEST Licence Generator
-                  keys <new-key-directory>
-                  issue <request.json> <private-key.pem> <output.json>
-                """);
-            return args.Length == 0 ? 0 : 1;
-    }
+    using var configuration = new ConfigurationManager();
+    configuration.SetBasePath(AppContext.BaseDirectory)
+        .AddJsonFile("appsettings.json", optional: false, reloadOnChange: false);
+    var options = configuration.GetRequiredSection("LicenceGenerator").Get<GeneratorOptions>()
+        ?? throw new InvalidOperationException("Missing LicenceGenerator configuration.");
+    Validator.ValidateObject(options, new ValidationContext(options), validateAllProperties: true);
+
+    var request = JsonSerializer.Deserialize<LicenceRequest>(File.ReadAllText(options.RequestPath), LicenceJson.Options)
+        ?? throw new ArgumentException("Missing licence request.");
+
+    var document = new LicenceIssuer().Issue(request, File.ReadAllText(options.PrivateKeyPath));
+    
+    LicenceFile.SaveNew(options.OutputPath, JsonSerializer.Serialize(document, LicenceJson.Options));
+
+    Console.WriteLine($"Licence created: {Path.GetFullPath(options.OutputPath)}");
     return 0;
 }
 catch (Exception ex) when (ex is IOException or UnauthorizedAccessException or JsonException
-    or ArgumentException or CryptographicException)
+    or ArgumentException or CryptographicException or InvalidOperationException or ValidationException)
 {
     Console.Error.WriteLine(ex.Message);
     return 1;
