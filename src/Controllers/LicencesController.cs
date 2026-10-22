@@ -1,4 +1,4 @@
-using InnovaTest.LicenceGenerator.Configuration;
+using InnovaTest.LicenceGenerator.Services;
 using InnovaTest.LicenceGenerator.Models;
 using InnovaTest.LicenceGenerator.Dtos;
 using Microsoft.AspNetCore.Mvc;
@@ -10,13 +10,11 @@ namespace InnovaTest.LicenceGenerator.Controllers;
 [Consumes("application/json")]
 public sealed class LicencesController : ControllerBase
 {
-    private readonly LicenceIssuer _issuer;
-    private readonly SigningKey _signingKey;
+    private readonly ILicenceService _licenceService;
 
-    public LicencesController(LicenceIssuer issuer, SigningKey signingKey)
+    public LicencesController(ILicenceService licenceService)
     {
-        _issuer = issuer;
-        _signingKey = signingKey;
+        _licenceService = licenceService;
     }
 
     [HttpPost("issue-licence")]
@@ -26,5 +24,5 @@ public sealed class LicencesController : ControllerBase
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
     public ActionResult<LicenceDocument> IssueLicence([FromBody] LicenceRequestDto licenceRequest)
-        => Ok(_issuer.IssueLicence(licenceRequest, _signingKey.Pem));
+        => Ok(_licenceService.IssueLicence(licenceRequest));
 }

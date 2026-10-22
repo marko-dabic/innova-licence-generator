@@ -1,7 +1,7 @@
 using InnovaTest.LicenceGenerator.Dtos;
 using InnovaTest.LicenceGenerator.Errors;
 
-namespace InnovaTest.LicenceGenerator;
+namespace InnovaTest.LicenceGenerator.Services;
 
 internal static class LicenceRules
 {

@@ -1,16 +1,18 @@
 using InnovaTest.LicenceGenerator.Models;
+using InnovaTest.LicenceGenerator.Serialization;
 using InnovaTest.LicenceGenerator.Dtos;
+using InnovaTest.LicenceGenerator.Configuration;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 
-namespace InnovaTest.LicenceGenerator;
+namespace InnovaTest.LicenceGenerator.Services;
 
-public sealed class LicenceIssuer(TimeProvider? timeProvider = null)
+public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvider) : ILicenceService
 {
-    private readonly TimeProvider _clock = timeProvider ?? TimeProvider.System;
+    private readonly TimeProvider _clock = timeProvider;
 
-    public LicenceDocument IssueLicence(LicenceRequestDto licenceRequest, string privateKeyPem)
+    public LicenceDocument IssueLicence(LicenceRequestDto licenceRequest)
     {
         var now = _clock.GetUtcNow();
         LicenceRules.Check(licenceRequest);
@@ -26,12 +28,12 @@ public sealed class LicenceIssuer(TimeProvider? timeProvider = null)
             EnabledOptions = licenceRequest.EnabledOptions, MaxConcurrentSessions = licenceRequest.MaxConcurrentSessions
         };
         
-        using var rsa = createRSA(privateKeyPem);
+        using var rsa = CreateRsa(signingKey.Pem);
 
         return EncodeLicence(claims, rsa);
     }
 
-    private static RSA createRSA(string privateKeyPem)
+    private static RSA CreateRsa(string privateKeyPem)
     {
         var rsa = RSA.Create();
         

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace InnovaTest.LicenceGenerator;
+namespace InnovaTest.LicenceGenerator.Serialization;
 
 public static class LicenceJson
 {

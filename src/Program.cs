@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 using Microsoft.OpenApi;
-using InnovaTest.LicenceGenerator;
+using InnovaTest.LicenceGenerator.Services;
 using InnovaTest.LicenceGenerator.Configuration;
 using InnovaTest.LicenceGenerator.Errors;
 
@@ -16,7 +16,7 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<LicenceRequestExceptionHandler>();
 builder.Services.AddSingleton(TimeProvider.System);
-builder.Services.AddSingleton<LicenceIssuer>();
+builder.Services.AddSingleton<ILicenceService, LicenceService>();
 builder.Services.AddOptions<GeneratorOptions>()
     .Bind(builder.Configuration.GetRequiredSection("LicenceGenerator"))
     .ValidateDataAnnotations()
