@@ -10,6 +10,9 @@ public sealed record LicenceClaims
     public required string DeviceId { get; init; }
     public required int ValidityInMonths { get; init; }
     public required int MaxConcurrentSessions { get; init; }
+    [JsonPropertyName("expireAtUtc")]
+    public DateTimeOffset? ExpireAtUtc { get; init; }
+    [JsonPropertyName("issuedAtUtc")]
+    public required DateTimeOffset IssuedAtUtc { get; init; }
     public required string[] EnabledOptions { get; init; }
-    [JsonPropertyName("iat")] public required long IssuedAt { get; init; }
 }

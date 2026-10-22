@@ -19,12 +19,12 @@ public sealed class LicencesController : ControllerBase
         _signingKey = signingKey;
     }
 
-    [HttpPost("issue")]
+    [HttpPost("issue-licence")]
     [RequestSizeLimit(65536)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
-    public ActionResult<LicenceDocument> Issue([FromBody] LicenceRequestDto request)
-        => Ok(_issuer.Issue(request, _signingKey.Pem));
+    public ActionResult<LicenceDocument> IssueLicence([FromBody] LicenceRequestDto licenceRequest)
+        => Ok(_issuer.IssueLicence(licenceRequest, _signingKey.Pem));
 }

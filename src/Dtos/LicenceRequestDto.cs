@@ -12,6 +12,9 @@ public sealed record LicenceRequestDto
     [MaxLength(128)]
     public required string[] EnabledOptions { get; init; }
 
+    [Required]
+    public required bool IsFixedExpiryDate { get; init; }
+
     [Range(1, int.MaxValue, ErrorMessage = "ValidityInMonths must be a positive number.")]
     [System.ComponentModel.DefaultValue(6)]
     public int ValidityInMonths { get; init; } = 6;
