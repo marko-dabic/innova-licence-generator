@@ -1,4 +1,5 @@
 using System.ComponentModel.DataAnnotations;
+using InnovaTest.LicenceGenerator.Models;
 
 namespace InnovaTest.LicenceGenerator.Dtos;
 
@@ -9,8 +10,7 @@ public sealed record LicenceRequestDto
     public required string DeviceId { get; init; }
 
     [Required]
-    [MaxLength(128)]
-    public required string[] EnabledOptions { get; init; }
+    public required LicenceOption[] EnabledOptions { get; init; }
 
     [Required]
     public required bool IsFixedExpiryDate { get; init; }

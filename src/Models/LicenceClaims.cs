@@ -14,5 +14,5 @@ public sealed record LicenceClaims
     public DateTimeOffset? ExpireAtUtc { get; init; }
     [JsonPropertyName("issuedAtUtc")]
     public required DateTimeOffset IssuedAtUtc { get; init; }
-    public required string[] EnabledOptions { get; init; }
+    public required LicenceOption[] EnabledOptions { get; init; }
 }

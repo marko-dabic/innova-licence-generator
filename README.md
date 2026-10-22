@@ -25,7 +25,17 @@ Send JSON to `POST /licences/issue-licence`:
 ```json
 {
   "deviceId": "INNOVATEST-SERIAL-12345",
-  "enabledOptions": ["hardness-testing", "report-export"],
+  "enabledOptions": [
+    {
+      "name": "package",
+      "options": [
+        { "name": "option-1" },
+        { "name": "option-2" },
+        { "name": "option-3" }
+      ]
+    },
+    { "name": "option-4" }
+  ],
   "isFixedExpiryDate": true,
   "validityInMonths": 6,
   "maxConcurrentSessions": 2
