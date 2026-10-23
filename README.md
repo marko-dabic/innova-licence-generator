@@ -36,13 +36,13 @@ Send JSON to `POST /licences/issue-licence`:
     },
     { "name": "option-4" }
   ],
-  "isFixedExpiryDate": true,
+  "isActivateOnImport": false,
   "validityInMonths": 6,
   "maxConcurrentSessions": 2
 }
 ```
 
-`deviceId`, `enabledOptions`, and `isFixedExpiryDate` are required. `validityInMonths` defaults to 6 and `maxConcurrentSessions` defaults to 1; both must be positive.
+`deviceId`, `enabledOptions`, and `isActivateOnImport` are required. `validityInMonths` defaults to 6 and `maxConcurrentSessions` defaults to 1; both must be positive.
 
 A successful response returns HTTP 200:
 
@@ -55,7 +55,7 @@ A successful response returns HTTP 200:
 The token contains the licence ID, issuer, audience, device ID, enabled options, validity, session limit, and UTC dates:
 
 - `issuedAtUtc`: the time the licence was generated.
-- `expireAtUtc`: `issuedAtUtc` plus `validityInMonths` when `isFixedExpiryDate` is true; otherwise `null`.
+- `expireAtUtc`: `null` when `isActivateOnImport` is true (expiry is deferred to import); otherwise `issuedAtUtc` plus `validityInMonths`.
 
 Dates use ISO 8601 format. Invalid requests return HTTP 400. Unexpected errors return HTTP 500.
 

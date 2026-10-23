@@ -21,9 +21,9 @@ public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvi
         {
             LicenceId = Guid.NewGuid().ToString(),
             IssuedAtUtc = now,
-            ExpireAtUtc = licenceRequest.IsFixedExpiryDate
-                ? now.AddMonths(licenceRequest.ValidityInMonths)
-                : null,
+            ExpireAtUtc = licenceRequest.IsActivateOnImport
+                ? null
+                : now.AddMonths(licenceRequest.ValidityInMonths),
             ValidityInMonths = licenceRequest.ValidityInMonths, DeviceId = licenceRequest.DeviceId,
             EnabledOptions = licenceRequest.EnabledOptions, MaxConcurrentSessions = licenceRequest.MaxConcurrentSessions
         };

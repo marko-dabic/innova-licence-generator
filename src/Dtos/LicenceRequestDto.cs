@@ -13,7 +13,7 @@ public sealed record LicenceRequestDto
     public required LicenceOption[] EnabledOptions { get; init; }
 
     [Required]
-    public required bool IsFixedExpiryDate { get; init; }
+    public required bool IsActivateOnImport { get; init; }
 
     [Range(1, int.MaxValue, ErrorMessage = "ValidityInMonths must be a positive number.")]
     [System.ComponentModel.DefaultValue(6)]
