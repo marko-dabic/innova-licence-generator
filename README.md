@@ -68,4 +68,4 @@ Dates use ISO 8601 format. Invalid requests return HTTP 400. Unexpected errors r
 - `Serialization/`: JSON serialization settings.
 - `Errors/`: error handling.
 
-Licences are signed with RS256 and can be verified using the matching public key. Token contents are readable, not encrypted. The API does not store licences or manage activation. Authentication is not currently implemented.
+Licences are signed with RS256 and can be verified using the matching public key. Token contents are readable, not encrypted. The API does not store licences or manage activation.
