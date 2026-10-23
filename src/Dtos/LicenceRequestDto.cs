@@ -13,6 +13,9 @@ public sealed record LicenceRequestDto
     public required LicenceOption[] EnabledOptions { get; init; }
 
     [Required]
+    public required bool IsPerpetual { get; init; }
+
+    [Required]
     public required bool IsActivateOnImport { get; init; }
 
     [Range(1, int.MaxValue, ErrorMessage = "ValidityInMonths must be a positive number.")]
@@ -20,6 +23,6 @@ public sealed record LicenceRequestDto
     public int ValidityInMonths { get; init; } = 6;
 
     [Range(1, int.MaxValue, ErrorMessage = "MaxConcurrentSessions must be a positive number.")]
-    [System.ComponentModel.DefaultValue(1)]
-    public int MaxConcurrentSessions { get; init; } = 1;
+    [Required]
+    public required int MaxConcurrentSessions { get; init; }
 }

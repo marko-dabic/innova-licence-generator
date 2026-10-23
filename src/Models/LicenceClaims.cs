@@ -8,6 +8,7 @@ public sealed record LicenceClaims
     [JsonRequired, JsonPropertyName("aud")] public string Audience { get; init; } = "InnovaTEST";
     [JsonPropertyName("licenceId")] public required string LicenceId { get; init; }
     public required string DeviceId { get; init; }
+    public required bool IsPerpetual { get; init; }
     public required int ValidityInMonths { get; init; }
     public required int MaxConcurrentSessions { get; init; }
     [JsonPropertyName("expireAtUtc")]

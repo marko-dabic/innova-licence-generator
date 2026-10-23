@@ -36,23 +36,24 @@ Send JSON to `POST /licences/issue-licence`:
     },
     { "name": "option-4" }
   ],
+  "isPerpetual": false,
   "isActivateOnImport": false,
   "validityInMonths": 6,
   "maxConcurrentSessions": 2
 }
 ```
 
-`deviceId`, `enabledOptions`, and `isActivateOnImport` are required. `validityInMonths` defaults to 6 and `maxConcurrentSessions` defaults to 1; both must be positive.
+All request properties are required except `validityInMonths`. `validityInMonths` and `maxConcurrentSessions` must be positive integers; no defaults are applied when fields are omitted.
 
 A successful response returns HTTP 200:
 
 ```json
 {
-  "token": "<signed JWT>"
+  "licence": "<signed JWT>"
 }
 ```
 
-The token contains the licence ID, issuer, audience, device ID, enabled options, validity, session limit, and UTC dates:
+The `licence` property contains the signed JWT with the licence ID, issuer, audience, device ID, enabled options, validity, session limit, and UTC dates:
 
 - `issuedAtUtc`: the time the licence was generated.
 - `expireAtUtc`: `null` when `isActivateOnImport` is true (expiry is deferred to import); otherwise `issuedAtUtc` plus `validityInMonths`.
@@ -69,3 +70,7 @@ Dates use ISO 8601 format. Invalid requests return HTTP 400. Unexpected errors r
 - `Errors/`: error handling.
 
 Licences are signed with RS256 and can be verified using the matching public key. Token contents are readable, not encrypted. The API does not store licences or manage activation.
+
+## Perpetual licences
+
+Set `isPerpetual` to `true` to issue a licence without expiry. This property will ignore `validityInMonths` if passed and return `expiryAtUtc` as null.
