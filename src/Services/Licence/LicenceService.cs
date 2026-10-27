@@ -17,21 +17,61 @@ public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvi
         var now = _clock.GetUtcNow();
         LicenceRules.Check(licenceRequest);
 
-        var claims = new LicenceClaims
+        LicenceClaims claims;
+        switch (licenceRequest.LicenceType)
         {
-            LicenceId = Guid.NewGuid().ToString(),
-            IssuedAtUtc = now,
-            LicenceType = licenceRequest.LicenceType,
-            ExpireAtUtc = licenceRequest is StandardLicenceDto ? now.AddMonths(6) : null,
-            ValidityInMonths = licenceRequest is ActivateOnImportLicenceDto import ? import.ValidityInMonths : null,
-            DeviceId = licenceRequest.DeviceId,
-            EnabledOptions = licenceRequest.EnabledOptions, MaxConcurrentSessions = licenceRequest.MaxConcurrentSessions
-        };
+            case LicenceType.Standard when licenceRequest is StandardLicenceDto standard:
+                claims = CreateStandardClaims(standard, now);
+                break;
+            case LicenceType.ActivateOnImport when licenceRequest is ActivateOnImportLicenceDto import:
+                claims = CreateActivateOnImportClaims(import, now);
+                break;
+            case LicenceType.Perpetual when licenceRequest is PerpetualLicenceDto perpetual:
+                claims = CreatePerpetualClaims(perpetual, now);
+                break;
+            default:
+                throw new ArgumentException("Unsupported licence type or request DTO.", nameof(licenceRequest));
+        }
         
         using var rsa = CreateRsa(signingKey.Pem);
 
         return EncodeLicence(claims, rsa);
     }
+
+    private static LicenceClaims CreateStandardClaims(StandardLicenceDto request, DateTimeOffset issuedAtUtc)
+        => new()
+        {
+            LicenceId = Guid.NewGuid().ToString(),
+            IssuedAtUtc = issuedAtUtc,
+            LicenceType = LicenceType.Standard,
+            ExpireAtUtc = issuedAtUtc.AddMonths(6),
+            DeviceId = request.DeviceId,
+            EnabledOptions = request.EnabledOptions,
+            MaxConcurrentSessions = request.MaxConcurrentSessions
+        };
+
+    private static LicenceClaims CreateActivateOnImportClaims(ActivateOnImportLicenceDto request, DateTimeOffset issuedAtUtc)
+        => new()
+        {
+            LicenceId = Guid.NewGuid().ToString(),
+            IssuedAtUtc = issuedAtUtc,
+            LicenceType = LicenceType.ActivateOnImport,
+            ValidityInMonths = request.ValidityInMonths,
+            DeviceId = request.DeviceId,
+            EnabledOptions = request.EnabledOptions,
+            MaxConcurrentSessions = request.MaxConcurrentSessions
+        };
+
+    private static LicenceClaims CreatePerpetualClaims(PerpetualLicenceDto request, DateTimeOffset issuedAtUtc)
+        => new()
+        {
+            LicenceId = Guid.NewGuid().ToString(),
+            IssuedAtUtc = issuedAtUtc,
+            LicenceType = LicenceType.Perpetual,
+            DeviceId = request.DeviceId,
+            EnabledOptions = request.EnabledOptions,
+            MaxConcurrentSessions = request.MaxConcurrentSessions
+        };
 
     private static RSA CreateRsa(string privateKeyPem)
     {
