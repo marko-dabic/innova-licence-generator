@@ -11,9 +11,17 @@ var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 });
 
 builder.Services.AddControllers().AddJsonOptions(options =>
-    options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow);
+{
+    options.JsonSerializerOptions.UnmappedMemberHandling = JsonUnmappedMemberHandling.Disallow;
+    options.JsonSerializerOptions.AllowOutOfOrderMetadataProperties = true;
+});
 builder.Services.AddSwaggerGen(options =>
-    options.SchemaFilter<LicenceRequestExampleFilter>());
+{
+    options.UseOneOfForPolymorphism();
+    options.SelectDiscriminatorNameUsing(_ => "licenceType");
+    options.SelectDiscriminatorValueUsing(type => type.Name.Replace("LicenceDto", ""));
+    options.SchemaFilter<LicenceRequestExampleFilter>();
+});
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<LicenceRequestExceptionHandler>();
 builder.Services.AddSingleton(TimeProvider.System);

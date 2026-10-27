@@ -12,7 +12,7 @@ public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvi
 {
     private readonly TimeProvider _clock = timeProvider;
 
-    public LicenceDocument IssueLicence(LicenceRequestDto licenceRequest)
+    public LicenceDocument IssueLicence(BaseLicenceRequestDto licenceRequest)
     {
         var now = _clock.GetUtcNow();
         LicenceRules.Check(licenceRequest);
@@ -21,11 +21,10 @@ public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvi
         {
             LicenceId = Guid.NewGuid().ToString(),
             IssuedAtUtc = now,
-            IsPerpetual = licenceRequest.IsPerpetual,
-            ExpireAtUtc = licenceRequest.IsPerpetual || licenceRequest.IsActivateOnImport
-                ? null
-                : now.AddMonths(licenceRequest.ValidityInMonths),
-            ValidityInMonths = licenceRequest.ValidityInMonths, DeviceId = licenceRequest.DeviceId,
+            LicenceType = licenceRequest.LicenceType,
+            ExpireAtUtc = licenceRequest is StandardLicenceDto ? now.AddMonths(6) : null,
+            ValidityInMonths = licenceRequest is ActivateOnImportLicenceDto import ? import.ValidityInMonths : null,
+            DeviceId = licenceRequest.DeviceId,
             EnabledOptions = licenceRequest.EnabledOptions, MaxConcurrentSessions = licenceRequest.MaxConcurrentSessions
         };
         

@@ -9,7 +9,7 @@ public sealed class LicenceRequestExampleFilter : ISchemaFilter
 {
     public void Apply(IOpenApiSchema schema, SchemaFilterContext context)
     {
-        if (context.Type != typeof(LicenceRequestDto) || schema is not OpenApiSchema requestSchema) return;
+        if (context.Type != typeof(BaseLicenceRequestDto) || schema is not OpenApiSchema requestSchema) return;
 
         requestSchema.Example = JsonNode.Parse("""
             {
@@ -24,9 +24,7 @@ public sealed class LicenceRequestExampleFilter : ISchemaFilter
                 },
                 { "name": "report-export" }
               ],
-              "isPerpetual": false,
-              "isActivateOnImport": false,
-              "validityInMonths": 6,
+              "licenceType": "Standard",
               "maxConcurrentSessions": 1
             }
             """);
