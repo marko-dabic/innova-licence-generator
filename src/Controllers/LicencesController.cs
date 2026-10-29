@@ -23,6 +23,6 @@ public sealed class LicencesController : ControllerBase
     [ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
-    public ActionResult<LicenceDocument> IssueLicence([FromBody] LicenceRequestDto licenceRequest)
+    public ActionResult<LicenceDocument> IssueLicence([FromBody] BaseLicenceRequestDto licenceRequest)
         => Ok(_licenceService.IssueLicence(licenceRequest));
 }
