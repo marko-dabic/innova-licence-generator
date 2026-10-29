@@ -25,6 +25,7 @@ public sealed class LicenceRequestExampleFilter : ISchemaFilter
                 { "name": "report-export" }
               ],
               "licenceType": "Standard",
+              "validityInMonths": 6,
               "maxConcurrentSessions": 1
             }
             """);

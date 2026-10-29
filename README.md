@@ -37,6 +37,7 @@ Send JSON to `POST /licences/issue-licence`:
     { "name": "option-4" }
   ],
   "licenceType": "Standard",
+  "validityInMonths": 6,
   "maxConcurrentSessions": 2
 }
 ```
@@ -45,13 +46,13 @@ Send JSON to `POST /licences/issue-licence`:
 
 | `licenceType` | Request DTO | Expiry |
 | --- | --- | --- |
-| `Standard` | `StandardLicenceDto` | Fixed at issuance time plus six months. |
+| `Standard` | `StandardLicenceDto` | Issuance time plus `validityInMonths` (required positive integer). |
 | `ActivateOnImport` | `ActivateOnImportLicenceDto` | Calculated by the importing application using `validityInMonths` (required positive integer). |
 | `Perpetual` | `PerpetualLicenceDto` | No expiry. |
 
 All three sealed DTOs inherit `BaseLicenceRequestDto`. Its `LicenceType` enum property is determined by the subtype; JSON uses `licenceType` to select that subtype. The import and perpetual DTOs expose read-only `IsActivateOnImport` and `IsPerpetual` flags respectively, both always `true`; callers can omit them.
 
-For an activate-on-import request, use the same common fields with `"licenceType": "ActivateOnImport"` and a required `"validityInMonths"` greater than zero, for example `"validityInMonths": 12`. For a perpetual request, use `"licenceType": "Perpetual"` and omit validity. Fields belonging to another subtype are rejected.
+Standard and activate-on-import requests require `"validityInMonths"` greater than zero, for example `"validityInMonths": 12`. For an activate-on-import request, use `"licenceType": "ActivateOnImport"`. For a perpetual request, use `"licenceType": "Perpetual"` and omit validity. Fields belonging to another subtype are rejected.
 
 A successful response returns HTTP 200:
 
@@ -64,7 +65,7 @@ A successful response returns HTTP 200:
 The `licence` property contains the signed JWT with the licence ID, issuer, audience, device ID, enabled options, validity, session limit, and UTC dates:
 
 - `issuedAtUtc`: the time the licence was generated.
-- `expireAtUtc`: `issuedAtUtc` plus six months for standard licences; `null` for activate-on-import and perpetual licences.
+- `expireAtUtc`: `issuedAtUtc` plus the requested `validityInMonths` for standard licences; `null` for activate-on-import and perpetual licences.
 - `licenceType`: identifies the licence behavior (`Standard`, `ActivateOnImport`, or `Perpetual`). The signed claims do not include the redundant `isActivateOnImport` and `isPerpetual` flags.
 - `validityInMonths`: the import duration for activate-on-import licences; `null` otherwise.
 

@@ -44,7 +44,7 @@ public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvi
             LicenceId = Guid.NewGuid().ToString(),
             IssuedAtUtc = issuedAtUtc,
             LicenceType = LicenceType.Standard,
-            ExpireAtUtc = issuedAtUtc.AddMonths(6),
+            ExpireAtUtc = issuedAtUtc.AddMonths(request.ValidityInMonths),
             DeviceId = request.DeviceId,
             EnabledOptions = request.EnabledOptions,
             MaxConcurrentSessions = request.MaxConcurrentSessions
