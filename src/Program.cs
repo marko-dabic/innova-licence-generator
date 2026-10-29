@@ -28,6 +28,8 @@ builder.Services.AddExceptionHandler<LicenceRequestExceptionHandler>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<LicenceActivationStore>();
 builder.Services.AddSingleton<LicenceTokenCodec>();
+builder.Services.AddSingleton<LicenceGenerator>();
+builder.Services.AddSingleton<LicenceActivator>();
 builder.Services.AddSingleton<ILicenceService, LicenceService>();
 builder.Services.AddOptions<GeneratorOptions>()
     .Bind(builder.Configuration.GetRequiredSection("LicenceGenerator"))

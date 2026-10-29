@@ -104,10 +104,12 @@ expiry checks against subsequent local clock rollback remains the importing appl
 ## Structure
 
 - `Controllers/`: HTTP endpoints.
-- `Services/Licence/`: validation, licence creation, and signing.
+- `Services/`: `LicenceService` delegates generation and activation to their dedicated classes.
+- `Services/GenerateLicence/`: generation rules and claim creation in `LicenceGenerator`.
+- `Services/ActivateLicence/`: activation logic in `LicenceActivator` and activation persistence.
+- `Serialization/`: JWT signing and verification in `LicenceTokenCodec`, plus JSON settings.
 - `Dtos/` and `Models/`: request, response, and token data.
 - `Configuration/`: application settings and signing key loading.
-- `Serialization/`: JSON serialization settings.
 - `Errors/`: error handling.
 
 Licences are signed with RS256 and can be verified using the matching public key. Token contents are readable, not encrypted. The API does not store licences or manage activation.

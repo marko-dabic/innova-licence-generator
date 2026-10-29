@@ -18,15 +18,15 @@ public sealed class LicenceTokenCodec(SigningKey signingKey)
         try
         {
             claims = payload.Deserialize<LicenceClaims>(LicenceJson.Options)
-                ?? throw InvalidLicence("Invalid licence payload.");
+                ?? throw InvalidLicenceRequestException.InvalidLicence("Invalid licence payload.");
         }
         catch (JsonException)
         {
-            throw InvalidLicence("Invalid licence payload.");
+            throw InvalidLicenceRequestException.InvalidLicence("Invalid licence payload.");
         }
 
         if (claims.Issuer != "InnovaTEST.LicenceGenerator" || claims.Audience != "InnovaTEST")
-            throw InvalidLicence("Invalid licence issuer or audience.");
+            throw InvalidLicenceRequestException.InvalidLicence("Invalid licence issuer or audience.");
 
         return new VerifiedLicence(claims, payload);
     }
@@ -43,37 +43,35 @@ public sealed class LicenceTokenCodec(SigningKey signingKey)
         return EncodeLicence(payload, rsa);
     }
 
-    private static InvalidLicenceRequestException InvalidLicence(string message) => new("licence", message);
-
     private static JsonObject VerifyLicence(string licence, RSA rsa)
     {
         try
         {
             if (string.IsNullOrWhiteSpace(licence) || licence.Length > 65536)
-                throw InvalidLicence("A signed licence is required.");
+                throw InvalidLicenceRequestException.InvalidLicence("A signed licence is required.");
             var parts = licence.Split('.');
-            if (parts.Length != 3) throw InvalidLicence("Invalid licence format.");
+            if (parts.Length != 3) throw InvalidLicenceRequestException.InvalidLicence("Invalid licence format.");
 
             using var header = JsonDocument.Parse(Decode(parts[0]));
             var properties = header.RootElement.EnumerateObject().ToArray();
             if (properties.Length != 2
                 || !header.RootElement.TryGetProperty("alg", out var algorithm) || algorithm.GetString() != "RS256"
                 || !header.RootElement.TryGetProperty("typ", out var type) || type.GetString() != "JWT")
-                throw InvalidLicence("Unsupported licence header.");
+                throw InvalidLicenceRequestException.InvalidLicence("Unsupported licence header.");
 
             if (!rsa.VerifyData(Encoding.ASCII.GetBytes($"{parts[0]}.{parts[1]}"), Decode(parts[2]),
                     HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1))
-                throw InvalidLicence("Invalid licence signature.");
+                throw InvalidLicenceRequestException.InvalidLicence("Invalid licence signature.");
 
             return JsonNode.Parse(Decode(parts[1]), new JsonNodeOptions { PropertyNameCaseInsensitive = false },
                 new JsonDocumentOptions { AllowDuplicateProperties = false }) as JsonObject
-                ?? throw InvalidLicence("Invalid licence payload.");
+                ?? throw InvalidLicenceRequestException.InvalidLicence("Invalid licence payload.");
         }
         catch (Exception exception) when (exception is FormatException or JsonException
                                         or InvalidOperationException or CryptographicException or ArgumentException
                                         && exception is not InvalidLicenceRequestException)
         {
-            throw InvalidLicence("Invalid signed licence.");
+            throw InvalidLicenceRequestException.InvalidLicence("Invalid signed licence.");
         }
     }
 
