@@ -1,18 +1,50 @@
 using InnovaTest.LicenceGenerator.Models;
 using InnovaTest.LicenceGenerator.Serialization;
 using InnovaTest.LicenceGenerator.Dtos;
-using InnovaTest.LicenceGenerator.Configuration;
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
+using System.Text.Json.Nodes;
+using InnovaTest.LicenceGenerator.Errors;
 
 namespace InnovaTest.LicenceGenerator.Services;
 
-public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvider) : ILicenceService
+public sealed class LicenceService(LicenceTokenCodec tokenCodec, TimeProvider timeProvider,
+    LicenceActivationStore activationStore) : ILicenceService
 {
     private readonly TimeProvider _clock = timeProvider;
 
-    public LicenceDocument IssueLicence(BaseLicenceRequestDto licenceRequest)
+    public LicenceDocument ActivateLicence(ActivateLicenceDto request)
+    {
+        ArgumentNullException.ThrowIfNull(request);
+        var verified = tokenCodec.Verify(request.Licence);
+        var claims = verified.Claims;
+        var payload = verified.Payload;
+
+        if (claims.LicenceType != LicenceType.ActivateOnImport)
+            throw InvalidLicence("Only ActivateOnImport licences can be activated.");
+        if (string.IsNullOrWhiteSpace(claims.LicenceId) || claims.ValidityInMonths is not > 0)
+            throw InvalidLicence("The licence must have an ID and a positive ValidityInMonths.");
+
+        // Activated tokens must never receive a new expiry, even if their stored record is lost.
+        if (claims.ExpireAtUtc is not null) return new LicenceDocument(request.Licence);
+
+        return activationStore.GetOrCreate(claims.LicenceId, () =>
+        {
+            DateTimeOffset expiry;
+            try
+            {
+                expiry = _clock.GetUtcNow().AddMonths(claims.ValidityInMonths.Value);
+            }
+            catch (ArgumentOutOfRangeException)
+            {
+                throw InvalidLicence("ValidityInMonths exceeds the supported expiry date range.");
+            }
+            payload["expireAtUtc"] = JsonValue.Create(expiry);
+            return tokenCodec.Sign(payload);
+        });
+    }
+
+    private static InvalidLicenceRequestException InvalidLicence(string message) => new("licence", message);
+
+    public LicenceDocument GenerateLicence(BaseLicenceRequestDto licenceRequest)
     {
         var now = _clock.GetUtcNow();
         LicenceRules.Check(licenceRequest);
@@ -33,28 +65,26 @@ public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvi
                 throw new ArgumentException("Unsupported licence type or request DTO.", nameof(licenceRequest));
         }
         
-        using var rsa = CreateRsa(signingKey.Pem);
-
-        return EncodeLicence(claims, rsa);
+        return tokenCodec.Sign(claims);
     }
 
-    private static LicenceClaims CreateStandardClaims(StandardLicenceDto request, DateTimeOffset issuedAtUtc)
+    private static LicenceClaims CreateStandardClaims(StandardLicenceDto request, DateTimeOffset generatedAtUtc)
         => new()
         {
             LicenceId = Guid.NewGuid().ToString(),
-            IssuedAtUtc = issuedAtUtc,
+            IssuedAtUtc = generatedAtUtc,
             LicenceType = LicenceType.Standard,
-            ExpireAtUtc = issuedAtUtc.AddMonths(request.ValidityInMonths),
+            ExpireAtUtc = generatedAtUtc.AddMonths(request.ValidityInMonths),
             DeviceId = request.DeviceId,
             EnabledOptions = request.EnabledOptions,
             MaxConcurrentSessions = request.MaxConcurrentSessions
         };
 
-    private static LicenceClaims CreateActivateOnImportClaims(ActivateOnImportLicenceDto request, DateTimeOffset issuedAtUtc)
+    private static LicenceClaims CreateActivateOnImportClaims(ActivateOnImportLicenceDto request, DateTimeOffset generatedAtUtc)
         => new()
         {
             LicenceId = Guid.NewGuid().ToString(),
-            IssuedAtUtc = issuedAtUtc,
+            IssuedAtUtc = generatedAtUtc,
             LicenceType = LicenceType.ActivateOnImport,
             ValidityInMonths = request.ValidityInMonths,
             DeviceId = request.DeviceId,
@@ -62,47 +92,14 @@ public sealed class LicenceService(SigningKey signingKey, TimeProvider timeProvi
             MaxConcurrentSessions = request.MaxConcurrentSessions
         };
 
-    private static LicenceClaims CreatePerpetualClaims(PerpetualLicenceDto request, DateTimeOffset issuedAtUtc)
+    private static LicenceClaims CreatePerpetualClaims(PerpetualLicenceDto request, DateTimeOffset generatedAtUtc)
         => new()
         {
             LicenceId = Guid.NewGuid().ToString(),
-            IssuedAtUtc = issuedAtUtc,
+            IssuedAtUtc = generatedAtUtc,
             LicenceType = LicenceType.Perpetual,
             DeviceId = request.DeviceId,
             EnabledOptions = request.EnabledOptions,
             MaxConcurrentSessions = request.MaxConcurrentSessions
         };
-
-    private static RSA CreateRsa(string privateKeyPem)
-    {
-        var rsa = RSA.Create();
-        
-        try
-        {
-            rsa.ImportFromPem(privateKeyPem);
-            if (rsa.KeySize < 3072)
-                throw new ArgumentException("RSA key must be at least 3072 bits.");
-
-            return rsa;
-        }
-        catch
-        {
-            rsa.Dispose();
-            throw;
-        }
-    }
-
-    private static LicenceDocument EncodeLicence(LicenceClaims claims, RSA rsa)
-    {
-        var header = Encode(Encoding.UTF8.GetBytes("{\"alg\":\"RS256\",\"typ\":\"JWT\"}"));
-        var payload = Encode(JsonSerializer.SerializeToUtf8Bytes(claims, LicenceJson.Options));
-        var input = $"{header}.{payload}";
-        var signature = rsa.SignData(Encoding.ASCII.GetBytes(input), HashAlgorithmName.SHA256, RSASignaturePadding.Pkcs1);
-        var document = new LicenceDocument($"{input}.{Encode(signature)}");
-
-        return document;
-    }
-
-    private static string Encode(byte[] bytes) => Convert.ToBase64String(bytes)
-        .TrimEnd('=').Replace('+', '-').Replace('/', '_');
 }

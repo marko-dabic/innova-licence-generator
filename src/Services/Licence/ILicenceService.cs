@@ -5,5 +5,6 @@ namespace InnovaTest.LicenceGenerator.Services;
 
 public interface ILicenceService
 {
-    LicenceDocument IssueLicence(BaseLicenceRequestDto licenceRequest);
+    LicenceDocument GenerateLicence(BaseLicenceRequestDto licenceRequest);
+    LicenceDocument ActivateLicence(ActivateLicenceDto request);
 }
