@@ -5,9 +5,9 @@ using InnovaTest.LicenceGenerator.Models;
 namespace InnovaTest.LicenceGenerator.Dtos;
 
 [JsonPolymorphic(TypeDiscriminatorPropertyName = "licenceType")]
-[JsonDerivedType(typeof(StandardLicenceDto), nameof(Models.LicenceType.Standard))]
-[JsonDerivedType(typeof(ActivateOnImportLicenceDto), nameof(Models.LicenceType.ActivateOnImport))]
-[JsonDerivedType(typeof(PerpetualLicenceDto), nameof(Models.LicenceType.Perpetual))]
+[JsonDerivedType(typeof(StandardLicenceDto), nameof(Models.LicenceTypeEnum.Standard))]
+[JsonDerivedType(typeof(ActivateOnImportLicenceDto), nameof(Models.LicenceTypeEnum.ActivateOnImport))]
+[JsonDerivedType(typeof(PerpetualLicenceDto), nameof(Models.LicenceTypeEnum.Perpetual))]
 public abstract class BaseLicenceRequestDto
 {
     [Required]
@@ -22,5 +22,5 @@ public abstract class BaseLicenceRequestDto
     public required int MaxConcurrentSessions { get; init; }
 
     [JsonIgnore]
-    public abstract LicenceType LicenceType { get; }
+    public abstract LicenceTypeEnum LicenceType { get; }
 }

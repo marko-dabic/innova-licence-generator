@@ -18,7 +18,7 @@ public sealed class LicenceService(LicenceTokenCodec tokenCodec, TimeProvider ti
         var claims = verified.Claims;
         var payload = verified.Payload;
 
-        if (claims.LicenceType != LicenceType.ActivateOnImport)
+        if (claims.LicenceType != LicenceTypeEnum.ActivateOnImport)
             throw InvalidLicence("Only ActivateOnImport licences can be activated.");
         if (string.IsNullOrWhiteSpace(claims.LicenceId) || claims.ValidityInMonths is not > 0)
             throw InvalidLicence("The licence must have an ID and a positive ValidityInMonths.");
@@ -52,13 +52,13 @@ public sealed class LicenceService(LicenceTokenCodec tokenCodec, TimeProvider ti
         LicenceClaims claims;
         switch (licenceRequest.LicenceType)
         {
-            case LicenceType.Standard when licenceRequest is StandardLicenceDto standard:
+            case LicenceTypeEnum.Standard when licenceRequest is StandardLicenceDto standard:
                 claims = CreateStandardClaims(standard, now);
                 break;
-            case LicenceType.ActivateOnImport when licenceRequest is ActivateOnImportLicenceDto import:
+            case LicenceTypeEnum.ActivateOnImport when licenceRequest is ActivateOnImportLicenceDto import:
                 claims = CreateActivateOnImportClaims(import, now);
                 break;
-            case LicenceType.Perpetual when licenceRequest is PerpetualLicenceDto perpetual:
+            case LicenceTypeEnum.Perpetual when licenceRequest is PerpetualLicenceDto perpetual:
                 claims = CreatePerpetualClaims(perpetual, now);
                 break;
             default:
@@ -73,7 +73,7 @@ public sealed class LicenceService(LicenceTokenCodec tokenCodec, TimeProvider ti
         {
             LicenceId = Guid.NewGuid().ToString(),
             IssuedAtUtc = generatedAtUtc,
-            LicenceType = LicenceType.Standard,
+            LicenceType = LicenceTypeEnum.Standard,
             ExpireAtUtc = generatedAtUtc.AddMonths(request.ValidityInMonths),
             DeviceId = request.DeviceId,
             EnabledOptions = request.EnabledOptions,
@@ -85,7 +85,7 @@ public sealed class LicenceService(LicenceTokenCodec tokenCodec, TimeProvider ti
         {
             LicenceId = Guid.NewGuid().ToString(),
             IssuedAtUtc = generatedAtUtc,
-            LicenceType = LicenceType.ActivateOnImport,
+            LicenceType = LicenceTypeEnum.ActivateOnImport,
             ValidityInMonths = request.ValidityInMonths,
             DeviceId = request.DeviceId,
             EnabledOptions = request.EnabledOptions,
@@ -97,7 +97,7 @@ public sealed class LicenceService(LicenceTokenCodec tokenCodec, TimeProvider ti
         {
             LicenceId = Guid.NewGuid().ToString(),
             IssuedAtUtc = generatedAtUtc,
-            LicenceType = LicenceType.Perpetual,
+            LicenceType = LicenceTypeEnum.Perpetual,
             DeviceId = request.DeviceId,
             EnabledOptions = request.EnabledOptions,
             MaxConcurrentSessions = request.MaxConcurrentSessions
