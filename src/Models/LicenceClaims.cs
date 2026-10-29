@@ -1,3 +1,4 @@
+using InnovaTest.LicenceGenerator.Enums;
 using System.Text.Json.Serialization;
 
 namespace InnovaTest.LicenceGenerator.Models;

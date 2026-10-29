@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace InnovaTest.LicenceGenerator.Models;
+namespace InnovaTest.LicenceGenerator.Enums;
 
 [JsonConverter(typeof(JsonStringEnumConverter<LicenceTypeEnum>))]
 public enum LicenceTypeEnum

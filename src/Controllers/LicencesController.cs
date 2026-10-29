@@ -1,7 +1,8 @@
-using InnovaTest.LicenceGenerator.Services;
+using InnovaTest.LicenceGenerator.Features.Licences.Generate.Dtos;
+using InnovaTest.LicenceGenerator.Features.Licences;
 using InnovaTest.LicenceGenerator.Models;
-using InnovaTest.LicenceGenerator.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using InnovaTest.LicenceGenerator.Features.Licences.Activate.Dtos;
 
 namespace InnovaTest.LicenceGenerator.Controllers;
 

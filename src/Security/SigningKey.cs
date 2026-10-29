@@ -1,7 +1,8 @@
-using System.Security.Cryptography;
+using InnovaTest.LicenceGenerator.Configuration;
 using Microsoft.Extensions.Options;
+using System.Security.Cryptography;
 
-namespace InnovaTest.LicenceGenerator.Configuration;
+namespace InnovaTest.LicenceGenerator.Security;
 
 public sealed class SigningKey
 {

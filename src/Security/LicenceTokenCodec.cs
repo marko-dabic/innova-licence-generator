@@ -1,12 +1,12 @@
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
-using System.Text.Json.Nodes;
-using InnovaTest.LicenceGenerator.Configuration;
 using InnovaTest.LicenceGenerator.Errors;
 using InnovaTest.LicenceGenerator.Models;
+using InnovaTest.LicenceGenerator.Serialization;
+using System.Security.Cryptography;
+using System.Text.Json.Nodes;
+using System.Text.Json;
+using System.Text;
 
-namespace InnovaTest.LicenceGenerator.Serialization;
+namespace InnovaTest.LicenceGenerator.Security;
 
 public sealed class LicenceTokenCodec(SigningKey signingKey)
 {

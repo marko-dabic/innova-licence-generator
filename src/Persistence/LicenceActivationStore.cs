@@ -1,8 +1,8 @@
+using InnovaTest.LicenceGenerator.Models;
 using System.Security.Cryptography;
 using System.Text;
-using InnovaTest.LicenceGenerator.Models;
 
-namespace InnovaTest.LicenceGenerator.Services;
+namespace InnovaTest.LicenceGenerator.Persistence;
 
 public sealed class LicenceActivationStore(IHostEnvironment environment)
 {
