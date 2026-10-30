@@ -1,7 +1,7 @@
-using System.Text.Json.Nodes;
-using InnovaTest.LicenceGenerator.Dtos;
+using InnovaTest.LicenceGenerator.Features.Licences.Generate.Dtos;
 using Microsoft.OpenApi;
 using Swashbuckle.AspNetCore.SwaggerGen;
+using System.Text.Json.Nodes;
 
 namespace InnovaTest.LicenceGenerator.Swagger;
 

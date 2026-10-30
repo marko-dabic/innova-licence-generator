@@ -1,7 +1,8 @@
-using InnovaTest.LicenceGenerator.Services;
+using InnovaTest.LicenceGenerator.Features.Licences.Generate.Dtos;
+using InnovaTest.LicenceGenerator.Features.Licences;
 using InnovaTest.LicenceGenerator.Models;
-using InnovaTest.LicenceGenerator.Dtos;
 using Microsoft.AspNetCore.Mvc;
+using InnovaTest.LicenceGenerator.Features.Licences.Activate.Dtos;
 
 namespace InnovaTest.LicenceGenerator.Controllers;
 
@@ -17,12 +18,21 @@ public sealed class LicencesController : ControllerBase
         _licenceService = licenceService;
     }
 
-    [HttpPost("issue-licence")]
+    [HttpPost("generate-licence")]
     [RequestSizeLimit(65536)]
     [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
     [ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]
     [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
-    public ActionResult<LicenceDocument> IssueLicence([FromBody] BaseLicenceRequestDto licenceRequest)
-        => Ok(_licenceService.IssueLicence(licenceRequest));
+    public ActionResult<LicenceDocument> GenerateLicence([FromBody] BaseLicenceRequestDto licenceRequest)
+        => Ok(_licenceService.GenerateLicence(licenceRequest));
+
+    [HttpPost("activate-licence")]
+    [RequestSizeLimit(65536)]
+    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+    [ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]
+    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+    public ActionResult<LicenceDocument> ActivateLicence([FromBody] ActivateLicenceDto request)
+        => Ok(_licenceService.ActivateLicence(request));
 }

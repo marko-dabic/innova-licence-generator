@@ -1,8 +1,12 @@
-using System.Text.Json.Serialization;
-using InnovaTest.LicenceGenerator.Swagger;
-using InnovaTest.LicenceGenerator.Services;
 using InnovaTest.LicenceGenerator.Configuration;
 using InnovaTest.LicenceGenerator.Errors;
+using InnovaTest.LicenceGenerator.Features.Licences.Activate;
+using InnovaTest.LicenceGenerator.Features.Licences;
+using InnovaTest.LicenceGenerator.Persistence;
+using InnovaTest.LicenceGenerator.Security;
+using InnovaTest.LicenceGenerator.Swagger;
+using LicenceGeneratorHandler = InnovaTest.LicenceGenerator.Features.Licences.Generate.LicenceGenerator;
+using System.Text.Json.Serialization;
 
 var builder = WebApplication.CreateBuilder(new WebApplicationOptions
 {
@@ -25,6 +29,10 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddProblemDetails();
 builder.Services.AddExceptionHandler<LicenceRequestExceptionHandler>();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<LicenceActivationStore>();
+builder.Services.AddSingleton<LicenceTokenCodec>();
+builder.Services.AddSingleton<LicenceGeneratorHandler>();
+builder.Services.AddSingleton<LicenceActivator>();
 builder.Services.AddSingleton<ILicenceService, LicenceService>();
 builder.Services.AddOptions<GeneratorOptions>()
     .Bind(builder.Configuration.GetRequiredSection("LicenceGenerator"))
