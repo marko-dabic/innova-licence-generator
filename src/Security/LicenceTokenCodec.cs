@@ -15,6 +15,7 @@ public sealed class LicenceTokenCodec(SigningKey signingKey)
         using var rsa = CreateRsa(signingKey.Pem);
         var payload = VerifyLicence(licence, rsa);
         LicenceClaims claims;
+
         try
         {
             claims = payload.Deserialize<LicenceClaims>(LicenceJson.Options)
@@ -49,11 +50,14 @@ public sealed class LicenceTokenCodec(SigningKey signingKey)
         {
             if (string.IsNullOrWhiteSpace(licence) || licence.Length > 65536)
                 throw InvalidLicenceRequestException.InvalidLicence("A signed licence is required.");
+
             var parts = licence.Split('.');
+            
             if (parts.Length != 3) throw InvalidLicenceRequestException.InvalidLicence("Invalid licence format.");
 
             using var header = JsonDocument.Parse(Decode(parts[0]));
             var properties = header.RootElement.EnumerateObject().ToArray();
+
             if (properties.Length != 2
                 || !header.RootElement.TryGetProperty("alg", out var algorithm) || algorithm.GetString() != "RS256"
                 || !header.RootElement.TryGetProperty("typ", out var type) || type.GetString() != "JWT")
@@ -79,6 +83,7 @@ public sealed class LicenceTokenCodec(SigningKey signingKey)
     {
         if (value.Length == 0 || value.Any(c => !char.IsAsciiLetterOrDigit(c) && c is not '-' and not '_'))
             throw new FormatException("Invalid base64url.");
+
         return Convert.FromBase64String(value.Replace('-', '+').Replace('_', '/')
             .PadRight((value.Length + 3) / 4 * 4, '='));
     }
