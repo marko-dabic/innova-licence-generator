@@ -150,11 +150,6 @@ returns it unchanged. Neither operation extends the expiry. Database failures fa
 there is no filesystem fallback. Multiple API instances must use the same database.
 Deleting activation records allows the original unactivated tokens to be activated again.
 
-On startup, existing `licences/activations/*.jwt` files are verified and imported without changing their
-tokens or expiries. Existing database records take precedence. Original files are preserved; archive
-them outside this directory after a successful migration. Imported records have a null activation time
-because the old store did not record it. An invalid legacy file stops startup so records are not silently lost.
-
 Activation requires access to the server (directly or through another connected computer that transfers
 the token to the offline machine). The importing application must verify the new token's signature and
 enforce its `expireAtUtc`. Server-side activation fixes the initial expiry calculation; protecting offline
@@ -167,7 +162,7 @@ expiry checks against subsequent local clock rollback remains the importing appl
 - `Features/Licences/Generate/`: `LicenceGenerator`, `LicenceGenerationValidator`, and generation DTOs.
 - `Features/Licences/Activate/`: activation logic, its request DTO, and the activation storage contract.
 - `Security/`: JWT signing and verification, verified token data, and signing key loading.
-- `Persistence/`: SQL Server activation storage, EF Core migrations, database initialization, and legacy file import.
+- `Persistence/`: SQL Server activation storage, EF Core migrations, and database initialization.
 - `Serialization/`: shared JSON settings.
 - `Models/`: shared licence claims, responses, and options.
 - `Enums/`: licence type definitions.

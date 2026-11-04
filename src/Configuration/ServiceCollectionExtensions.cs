@@ -39,7 +39,6 @@ internal static class ServiceCollectionExtensions
         services.AddDbContextFactory<LicenceDbContext>(options =>
             options.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()));
         services.AddSingleton<ILicenceActivationStore, LicenceActivationStore>();
-        services.AddSingleton<LegacyActivationImporter>();
         services.AddSingleton<LicenceDatabaseInitializer>();
 
         services.AddSingleton(TimeProvider.System);
