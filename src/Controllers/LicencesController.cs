@@ -9,30 +9,19 @@ namespace InnovaTest.LicenceGenerator.Controllers;
 [ApiController]
 [Route("licences")]
 [Consumes("application/json")]
-public sealed class LicencesController : ControllerBase
+[RequestSizeLimit(65536)]
+[ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
+[ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]
+[ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
+[ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
+public sealed class LicencesController(ILicenceService licenceService) : ControllerBase
 {
-    private readonly ILicenceService _licenceService;
-
-    public LicencesController(ILicenceService licenceService)
-    {
-        _licenceService = licenceService;
-    }
-
     [HttpPost("generate-licence")]
-    [RequestSizeLimit(65536)]
-    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-    [ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
     public ActionResult<LicenceDocument> GenerateLicence([FromBody] BaseLicenceRequestDto licenceRequest)
-        => Ok(_licenceService.GenerateLicence(licenceRequest));
+        => Ok(licenceService.GenerateLicence(licenceRequest));
 
     [HttpPost("activate-licence")]
-    [RequestSizeLimit(65536)]
-    [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
-    [ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]
-    [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
-    [ProducesResponseType<ProblemDetails>(StatusCodes.Status500InternalServerError)]
-    public ActionResult<LicenceDocument> ActivateLicence([FromBody] ActivateLicenceDto request)
-        => Ok(_licenceService.ActivateLicence(request));
+    public async Task<ActionResult<LicenceDocument>> ActivateLicence([FromBody] ActivateLicenceDto request,
+        CancellationToken cancellationToken)
+        => Ok(await licenceService.ActivateLicenceAsync(request, cancellationToken));
 }

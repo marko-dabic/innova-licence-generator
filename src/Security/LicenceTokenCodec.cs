@@ -71,9 +71,9 @@ public sealed class LicenceTokenCodec(SigningKey signingKey)
                 new JsonDocumentOptions { AllowDuplicateProperties = false }) as JsonObject
                 ?? throw InvalidLicenceRequestException.InvalidLicence("Invalid licence payload.");
         }
-        catch (Exception exception) when (exception is FormatException or JsonException
-                                        or InvalidOperationException or CryptographicException or ArgumentException
-                                        && exception is not InvalidLicenceRequestException)
+        catch (Exception exception) when (exception is not InvalidLicenceRequestException
+            && (exception is FormatException or JsonException or InvalidOperationException
+                or CryptographicException or ArgumentException))
         {
             throw InvalidLicenceRequestException.InvalidLicence("Invalid signed licence.");
         }

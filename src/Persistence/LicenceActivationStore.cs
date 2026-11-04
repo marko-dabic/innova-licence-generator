@@ -1,39 +1,54 @@
+using InnovaTest.LicenceGenerator.Features.Licences.Activate;
 using InnovaTest.LicenceGenerator.Models;
+using Microsoft.Data.SqlClient;
+using Microsoft.EntityFrameworkCore;
 using System.Security.Cryptography;
 using System.Text;
 
 namespace InnovaTest.LicenceGenerator.Persistence;
 
-public sealed class LicenceActivationStore(IHostEnvironment environment)
+public sealed class LicenceActivationStore(IDbContextFactory<LicenceDbContext> contextFactory) : ILicenceActivationStore
 {
-    private readonly string _directory = Path.Combine(environment.ContentRootPath, "licences", "activations");
-
-    public LicenceDocument GetOrCreate(string licenceId, Func<LicenceDocument> activate)
+    public async Task<LicenceDocument> GetOrCreateAsync(string licenceId, Func<ActivatedLicence> activate,
+        CancellationToken cancellationToken = default)
     {
-        Directory.CreateDirectory(_directory);
-        var name = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(licenceId)));
-        var path = Path.Combine(_directory, name + ".jwt");
-        if (File.Exists(path)) return new LicenceDocument(File.ReadAllText(path));
+        ArgumentException.ThrowIfNullOrWhiteSpace(licenceId);
+        ArgumentNullException.ThrowIfNull(activate);
 
-        var document = activate();
-        var temporaryPath = Path.Combine(_directory, Guid.NewGuid() + ".tmp");
+        var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(licenceId)));
+        await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
+        var existingToken = await FindTokenAsync(context, hash, cancellationToken);
+        if (existingToken is not null) return new LicenceDocument(existingToken);
+
+        var activation = activate();
+        context.LicenceActivations.Add(new LicenceActivation
+        {
+            LicenceIdHash = hash,
+            LicenceId = licenceId,
+            ActivatedToken = activation.Document.Licence,
+            ActivatedAtUtc = activation.ActivatedAtUtc,
+            ExpiresAtUtc = activation.ExpiresAtUtc
+        });
         try
         {
-            File.WriteAllText(temporaryPath, document.Licence);
-            try
-            {
-                // Publish only complete files; concurrent activations share the first result.
-                File.Move(temporaryPath, path, overwrite: false);
-            }
-            catch (IOException) when (File.Exists(path))
-            {
-                return new LicenceDocument(File.ReadAllText(path));
-            }
-            return document;
+            await context.SaveChangesAsync(cancellationToken);
         }
-        finally
+        catch (DbUpdateException exception) when (exception.InnerException is SqlException { Number: 2601 or 2627 })
         {
-            if (File.Exists(temporaryPath)) File.Delete(temporaryPath);
+            await using var readContext = await contextFactory.CreateDbContextAsync(cancellationToken);
+            var winnerToken = await FindTokenAsync(readContext, hash, cancellationToken);
+            if (winnerToken is null) throw;
+
+            return new LicenceDocument(winnerToken);
         }
+
+        return activation.Document;
     }
+
+    private static Task<string?> FindTokenAsync(LicenceDbContext context, string licenceIdHash,
+        CancellationToken cancellationToken)
+        => context.LicenceActivations
+            .Where(activation => activation.LicenceIdHash == licenceIdHash)
+            .Select(activation => activation.ActivatedToken)
+            .SingleOrDefaultAsync(cancellationToken);
 }
