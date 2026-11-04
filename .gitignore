@@ -2,9 +2,11 @@
 **/obj/
 .vs/
 keys/
-licences/
+/licences/
 *.private.pem
 *.pfx
 *.p12
+.env
+.tools/
 
 
