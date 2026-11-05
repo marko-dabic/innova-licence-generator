@@ -1,5 +1,11 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/InnovaTest.LicenceGenerator.csproj" />
+    <Project Path="src/InnovaTest.LicenceGenerator.Presentation/InnovaTest.LicenceGenerator.Presentation.csproj" />
+    <Project Path="src/InnovaTest.LicenceGenerator.Application/InnovaTest.LicenceGenerator.Application.csproj" />
+    <Project Path="src/InnovaTest.LicenceGenerator.Domain/InnovaTest.LicenceGenerator.Domain.csproj" />
+    <Project Path="src/InnovaTest.LicenceGenerator.Infrastructure/InnovaTest.LicenceGenerator.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/InnovaTest.LicenceGenerator.Tests/InnovaTest.LicenceGenerator.Tests.csproj" />
   </Folder>
 </Solution>
