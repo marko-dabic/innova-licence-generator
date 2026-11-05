@@ -33,7 +33,7 @@ You can view its status with `docker compose ps` and its logs with `docker compo
 Start the API from PowerShell or Git Bash:
 
 ```powershell
-dotnet run --project src
+dotnet run --project src/InnovaTest.LicenceGenerator.Presentation
 ```
 
 API: `http://localhost:5050`  
@@ -63,11 +63,11 @@ Changing `.env` after the database has been initialized does not change SQL Serv
 The local setup uses `sa` and a trusted self-signed certificate for convenience. For deployment,
 use a dedicated database account, managed secrets, and a validated server certificate.
 
-Schema migrations are committed under `src/Persistence/Migrations`. To add future migrations:
+Schema migrations are committed under `src/InnovaTest.LicenceGenerator.Infrastructure/Persistence/Migrations`. To add future migrations:
 
 ```powershell
 dotnet tool install dotnet-ef --tool-path .tools --version 10.0.14
-.\.tools\dotnet-ef migrations add YourMigrationName --project src --output-dir Persistence/Migrations
+.\.tools\dotnet-ef migrations add YourMigrationName --project src/InnovaTest.LicenceGenerator.Infrastructure --startup-project src/InnovaTest.LicenceGenerator.Presentation --output-dir Persistence/Migrations
 ```
 
 ## Generate a licence
@@ -114,6 +114,13 @@ A successful response returns HTTP 200:
 }
 ```
 
+Every successful generation is saved to SQL Server's `GeneratedLicences` table before the API returns
+HTTP 200. It stores `LicenceId` (primary key), `DeviceId`, `LicenceType` (as a string), `Licence`
+(the exact signed JWT returned to the caller), and `GeneratedAtUtc` (matching the JWT's `issuedAtUtc`).
+All three licence types are recorded. Database failures fail the request. Existing licences generated
+before this feature are not backfilled. Each generation request creates a new licence and record;
+retrying a request can generate another licence. Activation does not overwrite the generated token.
+
 The `licence` property contains the signed JWT with the licence ID, issuer, audience, device ID, enabled options, validity, session limit, and UTC dates:
 
 - `issuedAtUtc`: the time the licence was generated.
@@ -144,16 +151,14 @@ Malformed, modified, incorrectly signed, Standard, and Perpetual licences return
 The first activated token is stored in SQL Server's `LicenceActivations` table, together with the original
 licence ID, activation time, and expiry. A SHA-256 hash of the licence ID is the primary key, preserving
 the previous store's exact, case-sensitive licence ID lookup without limiting ID length.
-Concurrent requests return the first successfully saved token. Resubmitting the original token returns
-that stored token, including after server or container restarts; submitting an already activated token
-returns it unchanged. Neither operation extends the expiry. Database failures fail the request;
+Only the first activation succeeds. Concurrent attempts for the same licence ID return HTTP 409
+except for the first successful database insert. Resubmitting the original token or submitting an
+already activated token returns HTTP 409, regardless of whether its expiry is past, present, or future.
+The ProblemDetails response includes `code: "licence_already_activated"`. Expiry is never extended.
+If the first response is lost, retrying also returns 409; clients should retain a successful activation response.
+Database failures fail the request;
 there is no filesystem fallback. Multiple API instances must use the same database.
 Deleting activation records allows the original unactivated tokens to be activated again.
-
-On startup, existing `licences/activations/*.jwt` files are verified and imported without changing their
-tokens or expiries. Existing database records take precedence. Original files are preserved; archive
-them outside this directory after a successful migration. Imported records have a null activation time
-because the old store did not record it. An invalid legacy file stops startup so records are not silently lost.
 
 Activation requires access to the server (directly or through another connected computer that transfers
 the token to the offline machine). The importing application must verify the new token's signature and
@@ -162,17 +167,41 @@ expiry checks against subsequent local clock rollback remains the importing appl
 
 ## Structure
 
-- `Controllers/`: HTTP endpoints.
-- `Features/Licences/`: `LicenceService` and its controller-facing interface.
-- `Features/Licences/Generate/`: `LicenceGenerator`, `LicenceGenerationValidator`, and generation DTOs.
-- `Features/Licences/Activate/`: activation logic, its request DTO, and the activation storage contract.
-- `Security/`: JWT signing and verification, verified token data, and signing key loading.
-- `Persistence/`: SQL Server activation storage, EF Core migrations, database initialization, and legacy file import.
-- `Serialization/`: shared JSON settings.
-- `Models/`: shared licence claims, responses, and options.
-- `Enums/`: licence type definitions.
-- `Configuration/`: application options, service registration, and configuration directory discovery.
-- `Errors/`: error handling.
+```text
+InnovaTest.LicenceGenerator.slnx
+src/
+  InnovaTest.LicenceGenerator.Presentation/    # HTTP endpoints, Swagger, error mapping, startup
+  InnovaTest.LicenceGenerator.Application/     # Generation/activation use cases, DTOs, interfaces
+  InnovaTest.LicenceGenerator.Domain/          # Licence models and licence types
+  InnovaTest.LicenceGenerator.Infrastructure/  # SQL Server, EF migrations, JWT/RSA, key loading
+```
+
+Project references enforce the dependency direction:
+
+- Domain has no project or package dependencies.
+- Application references Domain only.
+- Infrastructure references Application (and uses its Domain types).
+- Presentation references Application and Infrastructure, and wires implementations at startup.
+
+Keep business workflows in `Application/Features`, storage and token contracts in Application,
+and technical implementations in Infrastructure. Domain types have no ASP.NET Core, EF Core,
+or JSON annotations. Token serialization conventions belong to Infrastructure. Application DTOs
+retain their JSON and input-validation annotations to preserve the existing public API contract.
+The Domain project is deliberately small until additional domain behavior warrants richer models.
+
+`ILicenceTokenCodec` hides RSA and JSON payloads from the use cases. Its verified-token contract
+exposes claims, while Infrastructure preserves the original payload when changing activation expiry.
+`ILicenceActivationStore.CreateAsync` atomically creates an activation and rejects duplicates; SQL Server
+unique-key handling stays in Infrastructure. Existing migration IDs and table mappings are unchanged.
+
+Select Presentation as the startup project in Visual Studio. The solution-root `appsettings.json`,
+`.env`, and `keys/` locations stay the same; published output includes `appsettings.json`.
+
+Build from the project root:
+
+```powershell
+dotnet build InnovaTest.LicenceGenerator.slnx
+```
 
 Licences are signed with RS256 and can be verified using the matching public key. Token contents are readable, not encrypted. The API stores the first activation result to prevent repeat activation from extending expiry.
 
