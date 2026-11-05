@@ -18,18 +18,21 @@ public sealed class LicenceActivationStore(IDbContextFactory<LicenceDbContext> c
 
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(licenceId)));
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        if (await context.LicenceActivations.AnyAsync(x => x.LicenceIdHash == hash, cancellationToken))
+
+        if (await context.LicenceActivations.AnyAsync(x => EF.Property<string>(x, "LicenceIdHash") == hash, cancellationToken))
             throw new LicenceAlreadyActivatedException();
 
         var activation = activate();
-        context.LicenceActivations.Add(new LicenceActivation
+        var entry = context.LicenceActivations.Add(new LicenceActivation
         {
-            LicenceIdHash = hash,
             LicenceId = licenceId,
             ActivatedToken = activation.Document.Licence,
             ActivatedAtUtc = activation.ActivatedAtUtc,
             ExpiresAtUtc = activation.ExpiresAtUtc
         });
+
+        entry.Property<string>("LicenceIdHash").CurrentValue = hash;
+        
         try
         {
             await context.SaveChangesAsync(cancellationToken);

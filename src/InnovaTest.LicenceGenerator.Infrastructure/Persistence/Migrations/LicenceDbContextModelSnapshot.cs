@@ -50,7 +50,7 @@ namespace InnovaTest.LicenceGenerator.Infrastructure.Persistence.Migrations
                     b.ToTable("GeneratedLicences", (string)null);
                 });
 
-            modelBuilder.Entity("InnovaTest.LicenceGenerator.Infrastructure.Persistence.LicenceActivation", b =>
+            modelBuilder.Entity("InnovaTest.LicenceGenerator.Domain.Models.LicenceActivation", b =>
                 {
                     b.Property<string>("LicenceIdHash")
                         .HasColumnType("char(64)");

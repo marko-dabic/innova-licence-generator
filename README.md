@@ -184,7 +184,9 @@ Project references enforce the dependency direction:
 - Presentation references Application and Infrastructure, and wires implementations at startup.
 
 Keep business workflows in `Application/Features`, storage and token contracts in Application,
-and technical implementations in Infrastructure. Domain types have no ASP.NET Core, EF Core,
+and technical implementations in Infrastructure. `LicenceActivation` and `GeneratedLicence` live in `Domain/Models`. The activation lookup hash
+is an EF shadow property configured and populated by Infrastructure, preserving the existing table.
+Domain types have no ASP.NET Core, EF Core,
 or JSON annotations. Token serialization conventions belong to Infrastructure. Application DTOs
 retain their JSON and input-validation annotations to preserve the existing public API contract.
 The Domain project is deliberately small until additional domain behavior warrants richer models.

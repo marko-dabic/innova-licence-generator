@@ -23,6 +23,7 @@ internal sealed class LicenceRequestExceptionHandler(IProblemDetailsService prob
                 }
             });
         }
+
         if (exception is LicenceAlreadyActivatedException conflict)
         {
             context.Response.StatusCode = StatusCodes.Status409Conflict;
@@ -38,9 +39,11 @@ internal sealed class LicenceRequestExceptionHandler(IProblemDetailsService prob
                 }
             });
         }
+
         if (exception is not InvalidLicenceRequestException validationException) return false;
 
         context.Response.StatusCode = StatusCodes.Status400BadRequest;
+        
         return await problemDetails.TryWriteAsync(new ProblemDetailsContext
         {
             HttpContext = context,

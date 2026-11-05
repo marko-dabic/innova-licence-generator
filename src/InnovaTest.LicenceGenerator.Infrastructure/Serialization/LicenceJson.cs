@@ -13,6 +13,7 @@ public static class LicenceJson
     private static JsonSerializerOptions CreateOptions()
     {
         var resolver = new DefaultJsonTypeInfoResolver();
+
         resolver.Modifiers.Add(typeInfo =>
         {
             foreach (var property in typeInfo.Properties)
@@ -26,6 +27,7 @@ public static class LicenceJson
                     property.ShouldSerialize = (_, value) => value is not null;
             }
         });
+        
         var options = new JsonSerializerOptions(JsonSerializerDefaults.Web)
         {
             WriteIndented = true,

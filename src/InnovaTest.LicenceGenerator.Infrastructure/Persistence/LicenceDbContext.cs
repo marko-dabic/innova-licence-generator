@@ -21,8 +21,10 @@ public sealed class LicenceDbContext(DbContextOptions<LicenceDbContext> options)
         generated.Property(x => x.GeneratedAtUtc).IsRequired();
 
         var activation = modelBuilder.Entity<LicenceActivation>();
-        activation.HasKey(x => x.LicenceIdHash);
-        activation.Property(x => x.LicenceIdHash).HasColumnType("char(64)");
+        activation.ToTable("LicenceActivations");
+        // Keep the database lookup key out of the domain model.
+        activation.Property<string>("LicenceIdHash").HasColumnType("char(64)");
+        activation.HasKey("LicenceIdHash");
         activation.Property(x => x.LicenceId).IsRequired();
         activation.Property(x => x.ActivatedToken).IsRequired();
     }
