@@ -96,11 +96,11 @@ Send JSON to `POST /licences/generate-licence`:
 
 `deviceId`, `enabledOptions`, `maxConcurrentSessions`, and the string discriminator `licenceType` are required. `maxConcurrentSessions` must be positive. This replaces the previous request format with independent licence flags.
 
-| `licenceType` | Request DTO | Expiry |
-| --- | --- | --- |
-| `Standard` | `StandardLicenceDto` | Generation time plus `validityInMonths` (required positive integer). |
+| `licenceType`      | Request DTO                  | Expiry                                                                                        |
+| ------------------ | ---------------------------- | --------------------------------------------------------------------------------------------- |
+| `Standard`         | `StandardLicenceDto`         | Generation time plus `validityInMonths` (required positive integer).                          |
 | `ActivateOnImport` | `ActivateOnImportLicenceDto` | Calculated by the importing application using `validityInMonths` (required positive integer). |
-| `Perpetual` | `PerpetualLicenceDto` | No expiry. |
+| `Perpetual`        | `PerpetualLicenceDto`        | No expiry.                                                                                    |
 
 All three sealed DTOs inherit `BaseLicenceRequestDto`. Its `LicenceType` enum property is determined by the subtype; JSON uses `licenceType` to select that subtype. The import and perpetual DTOs expose read-only `IsActivateOnImport` and `IsPerpetual` flags respectively, both always `true`; callers can omit them.
 
@@ -206,7 +206,3 @@ dotnet build InnovaTest.LicenceGenerator.slnx
 ```
 
 Licences are signed with RS256 and can be verified using the matching public key. Token contents are readable, not encrypted. The API stores the first activation result to prevent repeat activation from extending expiry.
-
-## Perpetual licences
-
-Set `licenceType` to `"Perpetual"` to generate a licence without expiry. The signed claims contain `licenceType: "Perpetual"` and `expireAtUtc: null`.
