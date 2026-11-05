@@ -4,6 +4,7 @@ namespace InnovaTest.LicenceGenerator.Application.Features.Licences.Activate;
 
 public interface ILicenceActivationStore
 {
-    Task<LicenceDocument> GetOrCreateAsync(string licenceId, Func<ActivatedLicence> activate,
+    // Atomically creates the activation; duplicates throw LicenceAlreadyActivatedException.
+    Task<LicenceDocument> CreateAsync(string licenceId, Func<ActivatedLicence> activate,
         CancellationToken cancellationToken = default);
 }

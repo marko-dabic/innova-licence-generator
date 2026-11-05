@@ -144,9 +144,12 @@ Malformed, modified, incorrectly signed, Standard, and Perpetual licences return
 The first activated token is stored in SQL Server's `LicenceActivations` table, together with the original
 licence ID, activation time, and expiry. A SHA-256 hash of the licence ID is the primary key, preserving
 the previous store's exact, case-sensitive licence ID lookup without limiting ID length.
-Concurrent requests return the first successfully saved token. Resubmitting the original token returns
-that stored token, including after server or container restarts; submitting an already activated token
-returns it unchanged. Neither operation extends the expiry. Database failures fail the request;
+Only the first activation succeeds. Concurrent attempts for the same licence ID return HTTP 409
+except for the first successful database insert. Resubmitting the original token or submitting an
+already activated token returns HTTP 409, regardless of whether its expiry is past, present, or future.
+The ProblemDetails response includes `code: "licence_already_activated"`. Expiry is never extended.
+If the first response is lost, retrying also returns 409; clients should retain a successful activation response.
+Database failures fail the request;
 there is no filesystem fallback. Multiple API instances must use the same database.
 Deleting activation records allows the original unactivated tokens to be activated again.
 
@@ -164,8 +167,6 @@ src/
   InnovaTest.LicenceGenerator.Application/     # Generation/activation use cases, DTOs, interfaces
   InnovaTest.LicenceGenerator.Domain/          # Licence models and licence types
   InnovaTest.LicenceGenerator.Infrastructure/  # SQL Server, EF migrations, JWT/RSA, key loading
-tests/
-  InnovaTest.LicenceGenerator.Tests/           # Use-case and cryptographic contract tests
 ```
 
 Project references enforce the dependency direction:
@@ -183,23 +184,17 @@ The Domain project is deliberately small until additional domain behavior warran
 
 `ILicenceTokenCodec` hides RSA and JSON payloads from the use cases. Its verified-token contract
 exposes claims, while Infrastructure preserves the original payload when changing activation expiry.
-`ILicenceActivationStore.GetOrCreateAsync` retains the atomic first-activation behavior; SQL Server
+`ILicenceActivationStore.CreateAsync` atomically creates an activation and rejects duplicates; SQL Server
 unique-key handling stays in Infrastructure. Existing migration IDs and table mappings are unchanged.
 
 Select Presentation as the startup project in Visual Studio. The solution-root `appsettings.json`,
 `.env`, and `keys/` locations stay the same; published output includes `appsettings.json`.
 
-Build and test from the project root:
+Build from the project root:
 
 ```powershell
 dotnet build InnovaTest.LicenceGenerator.slnx
-dotnet test InnovaTest.LicenceGenerator.slnx
 ```
-
-Tests use a fake clock, token codec, and in-memory activation store for application behavior,
-and temporary RSA keys for JWT contract tests. They require no SQL Server or production key.
-The concurrent application test verifies use-case behavior against an atomic test store; it does
-not replace integration testing of SQL Server's unique-key race handling.
 
 Licences are signed with RS256 and can be verified using the matching public key. Token contents are readable, not encrypted. The API stores the first activation result to prevent repeat activation from extending expiry.
 

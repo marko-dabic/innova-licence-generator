@@ -23,6 +23,21 @@ internal sealed class LicenceRequestExceptionHandler(IProblemDetailsService prob
                 }
             });
         }
+        if (exception is LicenceAlreadyActivatedException conflict)
+        {
+            context.Response.StatusCode = StatusCodes.Status409Conflict;
+            return await problemDetails.TryWriteAsync(new ProblemDetailsContext
+            {
+                HttpContext = context,
+                ProblemDetails = new ProblemDetails
+                {
+                    Status = StatusCodes.Status409Conflict,
+                    Title = "The licence has already been activated.",
+                    Detail = conflict.Message,
+                    Extensions = { ["code"] = "licence_already_activated" }
+                }
+            });
+        }
         if (exception is not InvalidLicenceRequestException validationException) return false;
 
         context.Response.StatusCode = StatusCodes.Status400BadRequest;

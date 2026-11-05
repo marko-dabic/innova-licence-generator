@@ -1,3 +1,4 @@
+using InnovaTest.LicenceGenerator.Application.Errors;
 using InnovaTest.LicenceGenerator.Application.Features.Licences.Activate;
 using InnovaTest.LicenceGenerator.Domain.Models;
 using Microsoft.Data.SqlClient;
@@ -9,7 +10,7 @@ namespace InnovaTest.LicenceGenerator.Infrastructure.Persistence;
 
 public sealed class LicenceActivationStore(IDbContextFactory<LicenceDbContext> contextFactory) : ILicenceActivationStore
 {
-    public async Task<LicenceDocument> GetOrCreateAsync(string licenceId, Func<ActivatedLicence> activate,
+    public async Task<LicenceDocument> CreateAsync(string licenceId, Func<ActivatedLicence> activate,
         CancellationToken cancellationToken = default)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(licenceId);
@@ -17,8 +18,8 @@ public sealed class LicenceActivationStore(IDbContextFactory<LicenceDbContext> c
 
         var hash = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(licenceId)));
         await using var context = await contextFactory.CreateDbContextAsync(cancellationToken);
-        var existingToken = await FindTokenAsync(context, hash, cancellationToken);
-        if (existingToken is not null) return new LicenceDocument(existingToken);
+        if (await context.LicenceActivations.AnyAsync(x => x.LicenceIdHash == hash, cancellationToken))
+            throw new LicenceAlreadyActivatedException();
 
         var activation = activate();
         context.LicenceActivations.Add(new LicenceActivation
@@ -35,20 +36,10 @@ public sealed class LicenceActivationStore(IDbContextFactory<LicenceDbContext> c
         }
         catch (DbUpdateException exception) when (exception.InnerException is SqlException { Number: 2601 or 2627 })
         {
-            await using var readContext = await contextFactory.CreateDbContextAsync(cancellationToken);
-            var winnerToken = await FindTokenAsync(readContext, hash, cancellationToken);
-            if (winnerToken is null) throw;
-
-            return new LicenceDocument(winnerToken);
+            throw new LicenceAlreadyActivatedException();
         }
 
         return activation.Document;
     }
 
-    private static Task<string?> FindTokenAsync(LicenceDbContext context, string licenceIdHash,
-        CancellationToken cancellationToken)
-        => context.LicenceActivations
-            .Where(activation => activation.LicenceIdHash == licenceIdHash)
-            .Select(activation => activation.ActivatedToken)
-            .SingleOrDefaultAsync(cancellationToken);
 }

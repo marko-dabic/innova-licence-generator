@@ -22,9 +22,9 @@ public sealed class LicenceActivator(ILicenceTokenCodec tokenCodec, TimeProvider
         if (string.IsNullOrWhiteSpace(claims.LicenceId) || claims.ValidityInMonths is not > 0)
             throw InvalidLicenceRequestException.InvalidLicence("The licence must have an ID and a positive ValidityInMonths.");
 
-        if (claims.ExpireAtUtc is not null) return Task.FromResult(new LicenceDocument(request.Licence));
+        if (claims.ExpireAtUtc is not null) throw new LicenceAlreadyActivatedException();
 
-        return activationStore.GetOrCreateAsync(claims.LicenceId,
+        return activationStore.CreateAsync(claims.LicenceId,
             () => CreateActivation(verified, claims.ValidityInMonths.Value), cancellationToken);
     }
 

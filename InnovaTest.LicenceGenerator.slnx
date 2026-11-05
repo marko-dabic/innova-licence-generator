@@ -5,7 +5,4 @@
     <Project Path="src/InnovaTest.LicenceGenerator.Domain/InnovaTest.LicenceGenerator.Domain.csproj" />
     <Project Path="src/InnovaTest.LicenceGenerator.Infrastructure/InnovaTest.LicenceGenerator.Infrastructure.csproj" />
   </Folder>
-  <Folder Name="/tests/">
-    <Project Path="tests/InnovaTest.LicenceGenerator.Tests/InnovaTest.LicenceGenerator.Tests.csproj" />
-  </Folder>
 </Solution>

@@ -21,6 +21,7 @@ public sealed class LicencesController(ILicenceService licenceService) : Control
         => Ok(licenceService.GenerateLicence(licenceRequest));
 
     [HttpPost("activate-licence")]
+    [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]
     public async Task<ActionResult<LicenceDocument>> ActivateLicence([FromBody] ActivateLicenceDto request,
         CancellationToken cancellationToken)
         => Ok(await licenceService.ActivateLicenceAsync(request, cancellationToken));
