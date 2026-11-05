@@ -1,3 +1,4 @@
+using InnovaTest.LicenceGenerator.Application.Features.Licences.Generate;
 using InnovaTest.LicenceGenerator.Application.Abstractions;
 using InnovaTest.LicenceGenerator.Application.Features.Licences.Activate;
 using InnovaTest.LicenceGenerator.Infrastructure.Persistence;
@@ -22,6 +23,7 @@ public static class ServiceCollectionExtensions
         services.AddDbContextFactory<LicenceDbContext>(options =>
             options.UseSqlServer(connectionString, sql => sql.EnableRetryOnFailure()));
         services.AddSingleton<ILicenceActivationStore, LicenceActivationStore>();
+        services.AddSingleton<IGeneratedLicenceStore, GeneratedLicenceStore>();
         services.AddSingleton<LicenceDatabaseInitializer>();
 
         services.AddSingleton<SigningKey>();

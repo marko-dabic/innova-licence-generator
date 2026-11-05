@@ -5,9 +5,11 @@ using InnovaTest.LicenceGenerator.Application.Abstractions;
 
 namespace InnovaTest.LicenceGenerator.Application.Features.Licences.Generate;
 
-public sealed class LicenceGenerator(ILicenceTokenCodec tokenCodec, TimeProvider timeProvider)
+public sealed class LicenceGenerator(ILicenceTokenCodec tokenCodec, TimeProvider timeProvider,
+    IGeneratedLicenceStore generatedLicenceStore)
 {
-    public LicenceDocument GenerateLicence(BaseLicenceRequestDto licenceRequest)
+    public async Task<LicenceDocument> GenerateLicenceAsync(BaseLicenceRequestDto licenceRequest,
+        CancellationToken cancellationToken = default)
     {
         LicenceGenerationValidator.Validate(licenceRequest);
         var now = timeProvider.GetUtcNow();
@@ -29,7 +31,18 @@ public sealed class LicenceGenerator(ILicenceTokenCodec tokenCodec, TimeProvider
             _ => throw new ArgumentException("Unsupported licence request type.", nameof(licenceRequest))
         };
 
-        return tokenCodec.Sign(claims);
+        var document = tokenCodec.Sign(claims);
+        
+        await generatedLicenceStore.SaveAsync(new GeneratedLicence
+        {
+            LicenceId = claims.LicenceId,
+            DeviceId = claims.DeviceId,
+            LicenceType = claims.LicenceType,
+            Licence = document.Licence,
+            GeneratedAtUtc = claims.IssuedAtUtc
+        }, cancellationToken);
+
+        return document;
     }
 
     private static DateTimeOffset CalculateExpiry(DateTimeOffset issuedAtUtc, int validityInMonths)

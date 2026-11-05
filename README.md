@@ -114,6 +114,13 @@ A successful response returns HTTP 200:
 }
 ```
 
+Every successful generation is saved to SQL Server's `GeneratedLicences` table before the API returns
+HTTP 200. It stores `LicenceId` (primary key), `DeviceId`, `LicenceType` (as a string), `Licence`
+(the exact signed JWT returned to the caller), and `GeneratedAtUtc` (matching the JWT's `issuedAtUtc`).
+All three licence types are recorded. Database failures fail the request. Existing licences generated
+before this feature are not backfilled. Each generation request creates a new licence and record;
+retrying a request can generate another licence. Activation does not overwrite the generated token.
+
 The `licence` property contains the signed JWT with the licence ID, issuer, audience, device ID, enabled options, validity, session limit, and UTC dates:
 
 - `issuedAtUtc`: the time the licence was generated.

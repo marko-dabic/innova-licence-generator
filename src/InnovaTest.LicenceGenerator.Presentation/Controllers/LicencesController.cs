@@ -17,8 +17,9 @@ namespace InnovaTest.LicenceGenerator.Presentation.Controllers;
 public sealed class LicencesController(ILicenceService licenceService) : ControllerBase
 {
     [HttpPost("generate-licence")]
-    public ActionResult<LicenceDocument> GenerateLicence([FromBody] BaseLicenceRequestDto licenceRequest)
-        => Ok(licenceService.GenerateLicence(licenceRequest));
+    public async Task<ActionResult<LicenceDocument>> GenerateLicence([FromBody] BaseLicenceRequestDto licenceRequest,
+        CancellationToken cancellationToken)
+        => Ok(await licenceService.GenerateLicenceAsync(licenceRequest, cancellationToken));
 
     [HttpPost("activate-licence")]
     [ProducesResponseType<ProblemDetails>(StatusCodes.Status409Conflict)]

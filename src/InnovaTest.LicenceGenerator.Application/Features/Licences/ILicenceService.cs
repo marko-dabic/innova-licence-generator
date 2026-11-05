@@ -6,6 +6,6 @@ namespace InnovaTest.LicenceGenerator.Application.Features.Licences;
 
 public interface ILicenceService
 {
-    LicenceDocument GenerateLicence(BaseLicenceRequestDto licenceRequest);
+    Task<LicenceDocument> GenerateLicenceAsync(BaseLicenceRequestDto licenceRequest, CancellationToken cancellationToken = default);
     Task<LicenceDocument> ActivateLicenceAsync(ActivateLicenceDto request, CancellationToken cancellationToken = default);
 }
