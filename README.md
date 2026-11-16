@@ -21,6 +21,27 @@ without `$` or `;` characters. SQL Server requires at least 8 characters from at
 uppercase letters, lowercase letters, digits, and symbols.
 Do not overwrite an existing `.env`; it contains the credentials for your existing database.
 
+Each worktree or checkout using the same Docker engine must have a unique
+`COMPOSE_PROJECT_NAME` and `SQLSERVER_PORT` in its own `.env`. Set the port in
+`ConnectionStrings__LicenceDatabase` to match `SQLSERVER_PORT`; the API supplies
+the password from `MSSQL_SA_PASSWORD`. For example, a second worktree can use:
+
+```dotenv
+COMPOSE_PROJECT_NAME=innova-licence-generator-feature
+SQLSERVER_PORT=1434
+ConnectionStrings__LicenceDatabase=Server=tcp:127.0.0.1,1434;Database=InnovaLicences;User Id=sa;Encrypt=True;TrustServerCertificate=True
+```
+
+Also set `MSSQL_SA_PASSWORD` in that worktree's `.env`. Compose requires the project
+name and port explicitly. The example values are for the primary checkout; choose
+different values when copying them to another worktree. Do not override the project
+name with `docker compose -p` unless it matches that worktree's configuration.
+
+For an existing installation, add `COMPOSE_PROJECT_NAME=innova-licence-generator`,
+`SQLSERVER_PORT=1433`, and the connection string from `.env.example` to the existing
+`.env`, preserving its password. This retains the existing database volume.
+Changing the project name selects a separate volume; it does not migrate existing data.
+
 Start the database:
 
 ```powershell
@@ -40,15 +61,17 @@ API: `http://localhost:5050`
 Swagger: `http://localhost:5050/swagger`
 
 The API creates the `InnovaLicences` database and applies EF Core migrations before accepting requests.
-SQL Server listens only on `localhost:1433`. The API runs on Windows, outside Docker.
+SQL Server listens only on localhost at `SQLSERVER_PORT` (1433 in the example).
+The API runs on Windows, outside Docker.
 
-Database data is stored in the Docker named volume `innova-licence-generator_sqlserver-data`.
+Database data is stored in the Docker named volume `<COMPOSE_PROJECT_NAME>_sqlserver-data`
+(`innova-licence-generator_sqlserver-data` for the primary example).
 `docker compose stop` stops the database; `docker compose up -d --wait` starts it again.
 `docker compose down` removes the container while preserving the volume.
 Do not use `docker compose down -v` unless you intend to delete the database and its activation records.
 Keep database backups; a Docker volume is persistent storage, not a backup.
 
-To inspect the database in SQL Server Management Studio, connect to `tcp:127.0.0.1,1433`
+To inspect the database in SQL Server Management Studio, connect to `tcp:127.0.0.1,<SQLSERVER_PORT>`
 using SQL Server Authentication, user `sa`, and the password in `.env`.
 Enable **Trust server certificate** for this local container.
 

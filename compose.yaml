@@ -1,4 +1,4 @@
-name: innova-licence-generator
+name: ${COMPOSE_PROJECT_NAME:?Set a unique COMPOSE_PROJECT_NAME in .env for each worktree}
 
 services:
   sqlserver:
@@ -8,12 +8,16 @@ services:
       MSSQL_PID: Express
       MSSQL_SA_PASSWORD: ${MSSQL_SA_PASSWORD:?Set MSSQL_SA_PASSWORD in .env}
     ports:
-      - "127.0.0.1:1433:1433"
+      - "127.0.0.1:${SQLSERVER_PORT:?Set a unique SQLSERVER_PORT in .env for each worktree}:1433"
     volumes:
       - sqlserver-data:/var/opt/mssql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$MSSQL_SA_PASSWORD\" -C -Q 'SELECT 1' -b -o /dev/null"]
+      test:
+        [
+          "CMD-SHELL",
+          '/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P "$$MSSQL_SA_PASSWORD" -C -Q ''SELECT 1'' -b -o /dev/null',
+        ]
       interval: 10s
       timeout: 5s
       retries: 12
