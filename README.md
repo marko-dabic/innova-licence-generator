@@ -153,6 +153,9 @@ The `licence` property contains the signed JWT with the licence ID, issuer, audi
 
 Dates use ISO 8601 format. Invalid requests return HTTP 400. Unexpected errors return HTTP 500.
 
+Generation and activation have no application-imposed request-body or token-length
+limits. Hosting servers and reverse proxies may impose their own request limits.
+
 ## Activate a licence
 
 Send a generated ActivateOnImport licence to `POST /licences/activate-licence`:
