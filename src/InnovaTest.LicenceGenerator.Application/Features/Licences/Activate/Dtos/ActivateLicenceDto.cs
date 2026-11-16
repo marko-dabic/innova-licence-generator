@@ -5,6 +5,5 @@ namespace InnovaTest.LicenceGenerator.Application.Features.Licences.Activate.Dto
 public sealed class ActivateLicenceDto
 {
     [Required]
-    [StringLength(65536, MinimumLength = 1)]
     public required string Licence { get; init; }
 }

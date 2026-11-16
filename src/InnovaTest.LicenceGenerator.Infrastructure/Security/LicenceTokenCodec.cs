@@ -59,7 +59,7 @@ public sealed class LicenceTokenCodec(SigningKey signingKey) : ILicenceTokenCode
     {
         try
         {
-            if (string.IsNullOrWhiteSpace(licence) || licence.Length > 65536)
+            if (string.IsNullOrWhiteSpace(licence))
                 throw InvalidLicenceRequestException.InvalidLicence("A signed licence is required.");
 
             var parts = licence.Split('.');

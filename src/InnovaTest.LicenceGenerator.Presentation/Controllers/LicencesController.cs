@@ -9,7 +9,7 @@ namespace InnovaTest.LicenceGenerator.Presentation.Controllers;
 [ApiController]
 [Route("licences")]
 [Consumes("application/json")]
-[RequestSizeLimit(65536)]
+[DisableRequestSizeLimit]
 [ResponseCache(NoStore = true, Location = ResponseCacheLocation.None)]
 [ProducesResponseType<LicenceDocument>(StatusCodes.Status200OK)]
 [ProducesResponseType<ValidationProblemDetails>(StatusCodes.Status400BadRequest)]
